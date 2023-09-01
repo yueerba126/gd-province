@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.warn.mapper.AdminGrainThresholdMapper">
+
+    <resultMap type="com.sydata.warn.domain.AdminGrainThreshold" id="AdminGrainThresholdResult">
+        <result property="id"    column="id"    />
+        <result property="remarks"    column="remarks"    />
+        <result property="czbz"    column="czbz"    />
+        <result property="zhgxsj"    column="zhgxsj"    />
+        <result property="gjts"    column="gjts"    />
+        <result property="zglw"    column="zglw"    />
+        <result property="zdlw"    column="zdlw"    />
+        <result property="zgls"    column="zgls"    />
+        <result property="zdls"    column="zdls"    />
+        <result property="zgcnw"    column="zgcnw"    />
+        <result property="zdcnw"    column="zdcnw"    />
+        <result property="zgcnsd"    column="zgcnsd"    />
+        <result property="zdcnsd"    column="zdcnsd"    />
+        <result property="zgcww"    column="zgcww"    />
+        <result property="zdcww"    column="zdcww"    />
+        <result property="zgcwsd"    column="zgcwsd"    />
+        <result property="zdcwsd"    column="zdcwsd"    />
+        <result property="zgch"    column="zgch"    />
+        <result property="zgyq"    column="zgyq"    />
+        <result property="zdyq"    column="zdyq"    />
+        <result property="zgdq"    column="zgdq"    />
+        <result property="zddq"    column="zddq"    />
+        <result property="zgeyht"    column="zgeyht"    />
+        <result property="zdeyht"    column="zdeyht"    />
+        <result property="zglhq"    column="zglhq"    />
+        <result property="zdlhq"    column="zdlhq"    />
+    </resultMap>
+
+    <sql id="selectAdminGrainThresholdVo">
+        select id, remarks, czbz, zhgxsj, create_time, create_by, update_time, update_by, region_id, country_id, province_id, city_id, area_id, enterprise_id, stock_house_id, gjts, zglw, zdlw, zgls, zdls, zgcnw, zdcnw, zgcnsd, zdcnsd, zgcww, zdcww, zgcwsd, zdcwsd, zgch, zgyq, zdyq, zgdq, zddq, zgeyht, zdeyht, zglhq, zdlhq from admin_grain_threshold
+    </sql>
+
+
+</mapper>

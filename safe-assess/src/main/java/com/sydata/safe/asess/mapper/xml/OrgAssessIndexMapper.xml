@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.OrgAssessIndexMapper">
+
+
+    <update id="allot">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_org_assess_index set
+            lead_dept_id = #{item.leadDeptId},
+            cooperate_dept_ids = #{item.cooperateDeptIds}
+            where id = #{item.id}
+        </foreach>
+    </update>
+
+    <update id="deptAssessSubmit">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_org_assess_index set
+            org_score = #{item.orgScore},
+            org_illustrate = #{item.orgIllustrate},
+            minus_cause = #{item.minusCause},
+            measure = #{item.measure},
+            file_ids = #{item.fileIds},
+            file_names = #{item.fileNames}
+            where id = #{item.orgAssessIndexId}
+        </foreach>
+    </update>
+
+    <update id="assess">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_org_assess_index set
+            assess_score = #{item.assessScore},
+            assess_minus_cause = #{item.assessMinusCause}
+            where id = #{item.orgAssessIndexId}
+        </foreach>
+    </update>
+
+    <update id="check">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_org_assess_index set
+            check_score = #{item.checkScore},
+            check_remark = #{item.checkRemark},
+            check_file_ids = #{item.checkFileIds},
+            check_file_names = #{item.checkFileNames}
+            where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

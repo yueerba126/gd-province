@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>gd-province-platform</artifactId>
+        <groupId>com.sydata.zt</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>home</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>framework</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>organize</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>basis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>trade</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>manage</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>admin</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>chart</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>report</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>record</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>video</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>safe-assess</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>connectivity</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>data-quality</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>dashboard</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>composite</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>reserve</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sydata.zt</groupId>
+            <artifactId>generate</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${parent.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.6.7</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.ReviewIndexMapper">
+
+    <update id="allot">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_review_index set
+            allot_lead_dept_id = #{item.allotLeadDeptId},
+            allot_cooperate_dept_ids = #{item.allotCooperateDeptIds}
+            where review_id in
+            <foreach collection="reviewIds" item="reviewId" open="(" close=")" separator=",">
+                #{reviewId}
+            </foreach>
+            and template_index_id = #{item.templateIndexId}
+        </foreach>
+    </update>
+
+    <update id="scoreLeadIndexSubmit">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_review_index set
+            assess_score = #{item.assessScore},
+            assess_minus_cause = #{item.assessMinusCause}
+            where id = #{item.reviewIndexId}
+        </foreach>
+    </update>
+
+    <update id="assess">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_review_index set
+            assess_score = #{item.assessScore},
+            assess_minus_cause = #{item.assessMinusCause}
+            where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

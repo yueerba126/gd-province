@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.data.quality.mapper.DataIssueMapper">
+
+    <sql id="columns">
+        id,api_code,data_id,data_json,issue_count,region_id,country_id,province_id,city_id,area_id,enterprise_id,stock_house_id
+    </sql>
+
+    <delete id="clear">
+        truncate table data_quality_data_issue
+    </delete>
+
+
+    <select id="pageByStockHouse" resultType="com.sydata.data.quality.vo.DataIssueVo">
+        select stock_house_id, enterprise_id, sum(issue_count) as issue_count
+        from data_quality_data_issue
+        <where>
+            <if test="param.enterpriseId != null and param.enterpriseId != ''">
+                and enterprise_id = #{param.enterpriseId}
+            </if>
+            <if test="param.stockHouseId != null and param.stockHouseId != ''">
+                and stock_house_id = #{param.stockHouseId}
+            </if>
+        </where>
+        group by stock_house_id
+        order by sum(issue_count) desc
+    </select>
+
+
+    <select id="pageByStockHouseApi" resultType="com.sydata.data.quality.vo.DataIssueVo">
+        select stock_house_id, api_code, sum(issue_count) as issue_count
+        from data_quality_data_issue
+        <where>
+            <if test="param.enterpriseId != null and param.enterpriseId != ''">
+                and enterprise_id = #{param.enterpriseId}
+            </if>
+            <if test="param.stockHouseId != null and param.stockHouseId != ''">
+                and stock_house_id = #{param.stockHouseId}
+            </if>
+            <if test="param.apiCode != null and param.apiCode != ''">
+                and api_code = #{param.apiCode}
+            </if>
+        </where>
+        group by stock_house_id, api_code
+    </select>
+
+    <select id="pages" resultType="com.sydata.data.quality.vo.DataIssueVo">
+        select <include refid="columns"/> from data_quality_data_issue
+        <where>
+            <if test="param.enterpriseId != null and param.enterpriseId != ''">
+                and enterprise_id = #{param.enterpriseId}
+            </if>
+
+            <if test="param.stockHouseId != null and param.stockHouseId != ''">
+                and stock_house_id = #{param.stockHouseId}
+            </if>
+
+            <if test="param.stockHouseIds != null and param.stockHouseIds.size > 0">
+                and stock_house_id in
+                <foreach collection="param.stockHouseIds" item="stockHouseId" open="(" separator="," close=")">
+                    #{stockHouseId}
+                </foreach>
+            </if>
+
+            <if test="param.apiCode != null and param.apiCode != ''">
+                and api_code = #{param.apiCode}
+            </if>
+
+            <if test="param.dataId != null and param.dataId != ''">
+                and data_id = #{param.dataId}
+            </if>
+
+            <if test="param.fieldName != null and param.fieldName != '' and param.fieldValue != null and param.fieldValue != ''">
+                and json_contains(data_json, json_object('${param.fieldName}','${param.fieldValue}'))
+            </if>
+        </where>
+
+    </select>
+
+    <insert id="ignoreInsert">
+        insert ignore into data_quality_data_issue(<include refid="columns"/>)
+        values
+        (
+            #{id},#{apiCode},#{dataId},#{dataJson},#{issueCount},#{regionId},#{countryId},#{provinceId},#{cityId},#{areaId},#{enterpriseId},#{stockHouseId}
+        )
+    </insert>
+
+</mapper>

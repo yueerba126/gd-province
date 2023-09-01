@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.OrgAssessMapper">
+
+
+    <update id="deptAssessSubmit">
+        update safe_assess_org_assess set
+        assess_dept_submit_count = assess_dept_submit_count + 1,
+        state = if(assess_dept_count = assess_dept_submit_count, '已自评', state),
+        lead_await_count = lead_await_count - #{orgAssessDept.leadCount},
+        cooperate_await_count = cooperate_await_count - #{orgAssessDept.cooperateCount},
+        org_score = org_score + #{leadAlreadyScore}
+        where id = #{orgAssessDept.orgAssessId}
+        and lead_await_count - #{orgAssessDept.leadCount} >= 0
+        and cooperate_await_count - #{orgAssessDept.cooperateCount} >= 0
+        and assess_dept_count >= assess_dept_submit_count + 1
+        and template_score >= org_score + #{leadAlreadyScore}
+    </update>
+
+    <update id="deptAssessReset">
+        update safe_assess_org_assess set
+        lead_await_count = lead_await_count + #{leadCount},
+        cooperate_await_count = cooperate_await_count + #{cooperateCount},
+        assess_dept_submit_count = assess_dept_submit_count - 1,
+        state = '待自评',
+        org_score = org_score - #{leadAlreadyScore}
+        where id = #{orgAssessId}
+        and lead_count >= lead_await_count + #{leadCount}
+        and cooperate_count >= cooperate_await_count + #{cooperateCount}
+        and assess_dept_submit_count > 0
+        and state not in ('待考核','已考核')
+        and org_score - #{leadAlreadyScore} >= 0
+    </update>
+
+
+    <update id="assess">
+        update safe_assess_org_assess set
+        dept_assess_submit_count = dept_assess_submit_count + 1,
+        state = if(dept_assess_count = dept_assess_submit_count, '已考核', '待考核'),
+        dept_lead_await_count = dept_lead_await_count - #{deptLeadCount},
+        dept_cooperate_await_count = dept_cooperate_await_count - #{deptCooperateCount},
+        assess_score = assess_score + #{assessScore},
+        score = round(assess_score / template_score * 100, 2)
+        where id = #{orgAssessId}
+        and dept_assess_count >= dept_assess_submit_count + 1
+        and dept_lead_await_count - #{deptLeadCount} >= 0
+        and dept_cooperate_await_count - #{deptCooperateCount} >= 0
+        and template_score >= assess_score + #{assessScore}
+    </update>
+
+    <update id="assessReset">
+        update safe_assess_org_assess set
+        dept_assess_submit_count = dept_assess_submit_count - 1,
+        dept_lead_await_count = dept_lead_await_count + #{deptLeadCount},
+        dept_cooperate_await_count = dept_cooperate_await_count + #{deptCooperateCount},
+        assess_score = assess_score - #{assessScore},
+        score = round(assess_score / template_score * 100, 2)
+        where id = #{orgAssessId}
+        and dept_assess_submit_count - 1 >= 0
+        and dept_lead_count >= dept_lead_await_count + #{deptLeadCount}
+        and dept_cooperate_count >= dept_cooperate_await_count + #{deptCooperateCount}
+        and assess_score - #{assessScore} >= 0
+    </update>
+
+    <update id="check">
+        update safe_assess_org_assess set
+        check_await_count = #{checkAwaitCount},
+        check_score = #{checkScore},
+        score = round(assess_score / template_score * #{assessScoreProportion}, 2) +
+                round(check_score / template_score * #{checkScoreProportion}, 2)
+        where id = #{orgAssessId}
+    </update>
+</mapper>

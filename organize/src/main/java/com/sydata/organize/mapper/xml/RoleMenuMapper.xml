@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.organize.mapper.RoleMenuMapper">
+
+    <resultMap type="com.sydata.organize.domain.RoleMenu" id="roleMenuResult">
+        <result property="id"    column="id"    />
+        <result property="roleId"    column="role_id"    />
+        <result property="menuId"    column="menu_id"    />
+    </resultMap>
+
+    <sql id="selectRoleMenuVo">
+        select id, role_id, menu_id from org_role_menu
+    </sql>
+
+    <insert id="insertBatchIgnore">
+        insert ignore into org_role_menu(id,role_id,menu_id)
+        <trim prefix="values " suffixOverrides=",">
+            <foreach collection="list" item="t">
+                (#{t.id},#{t.roleId}, #{t.menuId}),
+            </foreach>
+        </trim>
+    </insert>
+
+
+</mapper>

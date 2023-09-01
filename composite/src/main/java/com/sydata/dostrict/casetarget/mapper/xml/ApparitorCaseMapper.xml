@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.casetarget.mapper.ApparitorCaseMapper">
+
+    <resultMap type="com.sydata.dostrict.casetarget.domain.ApparitorCase" id="ApparitorCaseResult">
+        <result property="id"    column="id"    />
+        <result property="caseName"    column="case_name"    />
+        <result property="caseEnterpriseId"    column="case_enterprise_id"    />
+        <result property="corporation"    column="corporation"    />
+        <result property="phone"    column="phone"    />
+        <result property="address"    column="address"    />
+        <result property="caseType"    column="case_type"    />
+        <result property="place"    column="place"    />
+        <result property="caseDate"    column="case_date"    />
+        <result property="caseSource"    column="case_source"    />
+        <result property="caseDescribe"    column="case_describe"    />
+        <result property="fileAttachment"    column="file_attachment"    />
+        <result property="caseProcedure"    column="case_procedure"    />
+        <result property="caseCompletion"    column="case_completion"    />
+        <result property="remark"    column="remark"    />
+        <result property="fileRecord"    column="file_record"    />
+        <result property="fileSheet"    column="file_sheet"    />
+        <result property="fileHandle"    column="file_handle"    />
+    </resultMap>
+
+    <sql id="selectApparitorCaseVo">
+        select id, create_by, create_time, update_by, update_time, enterprise_id, case_name, case_enterprise_id, corporation, phone, address, case_type, place, case_date, case_source, case_describe, file_attachment, case_procedure, case_completion, remark, file_record, file_sheet, file_handle, tenant_id, region_id, country_id, province_id, city_id, area_id from apparitor_case
+    </sql>
+
+
+</mapper>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.plan.mapper.WareHouseInvestMapper">
+    <select id="queryStockHouseList"
+            parameterType="com.sydata.dostrict.plan.param.WarehousInvestManageSelectParam"
+            resultType="com.sydata.basis.vo.StockHouseVo">
+        select
+         a.area_id
+        ,a.cfs
+        ,a.city_id
+        ,a.country_id
+        ,a.create_by
+        ,a.create_time
+        ,a.czbz
+        ,b.dwmc
+        ,a.dwdm
+        ,a.enterprise_id
+        ,a.hk_region_id
+        ,a.id
+        ,a.jd
+        ,a.kqcq
+        ,a.kqdm
+        ,a.kqdz
+        ,a.kqmc
+        ,a.province_id
+        ,a.region_id
+        ,a.stock_house_id
+        ,a.update_by
+        ,a.update_time
+        ,a.wd
+        ,a.xzqhdm
+        ,c.name xzqhdmName
+        ,a.ygs
+        ,a.yxcr
+        ,a.yxgr
+        ,a.zdmj
+        ,a.zhgxsj
+         from basis_stock_house  a
+         left join basis_company b on a.dwdm = b.dwdm
+         left join org_region c on a.region_id = c.id
+        where a.czbz != 'd'
+        <if test=" null != dwdm ">
+            and a.enterprise_id = #{dwdm}
+        </if>
+        <if test=" null != kqdm">
+            and a.stock_house_id = #{kqdm}
+        </if>
+        <if test=" null != xzqhdm">
+            and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+        </if>
+    </select>
+    <select id="queryGranaryCount"
+            parameterType="com.sydata.dostrict.plan.param.WarehousInvestManageSelectParam"
+            resultType="integer">
+        select count(*) from basis_granary a
+        where a.czbz != 'd'
+        <if test=" null != dwdm ">
+            and a.enterprise_id = #{dwdm}
+        </if>
+        <if test=" null != kqdm">
+            and a.stock_house_id = #{kqdm}
+        </if>
+        <if test=" null != xzqhdm">
+            and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+        </if>
+    </select>
+    <select id="queryCargoCount"
+            parameterType="com.sydata.dostrict.plan.param.WarehousInvestManageSelectParam"
+            resultType="integer">
+        select count(*) from basis_cargo a
+        where a.czbz != 'd'
+        <if test=" null != dwdm ">
+            and a.enterprise_id = #{dwdm}
+        </if>
+        <if test=" null != kqdm">
+            and a.stock_house_id = #{kqdm}
+        </if>
+        <if test=" null != xzqhdm">
+            and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+        </if>
+    </select>
+    <select id="queryDeviceCount"
+            parameterType="com.sydata.dostrict.plan.param.WarehousInvestManageSelectParam"
+            resultType="integer">
+        select count(*) from basis_device a
+        where a.czbz != 'd'
+        <if test=" null != dwdm ">
+            and a.enterprise_id = #{dwdm}
+        </if>
+        <if test=" null != kqdm">
+            and a.stock_house_id = #{kqdm}
+        </if>
+        <if test=" null != xzqhdm">
+            and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+        </if>
+    </select>
+</mapper>

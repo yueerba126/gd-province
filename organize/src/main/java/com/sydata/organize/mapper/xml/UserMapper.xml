@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.organize.mapper.UserMapper">
+
+
+    <select id="pages" resultType="com.sydata.organize.vo.UserVo">
+        select
+        u.id,
+        u.account,
+        u.password,
+        u.name,
+        u.create_by,
+        u.create_time,
+        u.update_by,
+        u.update_time,
+        u.organize_id,
+        u.dept_id
+        from org_user u
+        <if test="param.roleId != null">
+            inner join org_user_role ur on (ur.user_id = u.id and ur.role_id = #{param.roleId})
+        </if>
+        <where>
+            <if test="param.account != null and param.account != ''">
+                and u.account like CONCAT(#{param.account},'%')
+            </if>
+
+            <if test="param.name != null and param.name != ''">
+                and u.name like CONCAT(#{param.name},'%')
+            </if>
+
+            <if test="param.organizeId != null and param.organizeId != ''">
+                and u.organize_id = #{param.organizeId}
+            </if>
+
+            <if test="param.deptId != null">
+                and u.dept_id = #{param.deptId}
+            </if>
+        </where>
+        group by u.id
+        order by u.update_time desc
+    </select>
+</mapper>

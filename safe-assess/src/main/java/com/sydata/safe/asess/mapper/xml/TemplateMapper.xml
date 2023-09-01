@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.TemplateMapper">
+
+    <update id="operationRegionSubmitCount">
+        update safe_assess_template set
+        <if test="count == -1">
+            dept_assess_count = 0,
+        </if>
+        region_submit_count = region_submit_count + #{count}
+        where id = #{id}
+        and region_submit_count + #{count} >= 0 and region_submit_count + #{count} &lt;= region_total_count
+    </update>
+
+    <update id="operationRegionAssessCount">
+        update safe_assess_template set
+        region_assess_count = region_assess_count + #{count},
+        state = if(region_assess_count = region_total_count, '已完成', '已发布')
+        where id = #{id}
+        and region_assess_count + #{count} >= 0 and region_assess_count + #{count} &lt;= region_total_count
+    </update>
+
+    <update id="operationDeptAllotCount">
+        update safe_assess_template set
+        dept_allot_count = dept_allot_count + #{count},
+        state = if(dept_allot_count = dept_total_count, '待发布', state)
+        where id = #{id}
+        and dept_allot_count + #{count} >= 0 and dept_allot_count + #{count} &lt;= dept_total_count
+    </update>
+
+    <update id="operationDeptAssessCount">
+        update safe_assess_template set
+        dept_assess_count = dept_assess_count + #{count}
+        where id = #{id}
+        and dept_assess_count + #{count} >= 0 and dept_assess_count + #{count} &lt;= dept_total_count
+    </update>
+</mapper>

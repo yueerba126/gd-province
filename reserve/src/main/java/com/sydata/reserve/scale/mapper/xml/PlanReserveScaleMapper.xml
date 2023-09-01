@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.reserve.scale.mapper.PlanReserveScaleMapper">
+
+    <resultMap type="com.sydata.reserve.scale.domain.PlanReserveScale" id="PlanReserveScaleResult">
+        <result property="id"    column="id"    />
+        <result property="remarks"    column="remarks"    />
+        <result property="regionCode"    column="region_code"    />
+        <result property="regionParentCode"    column="region_parent_code"    />
+        <result property="grainAmount"    column="grain_amount"    />
+        <result property="oilAmount"    column="oil_amount"    />
+        <result property="isArea"    column="is_area"    />
+    </resultMap>
+
+    <sql id="selectPlanReserveScaleVo">
+        select id, remarks, create_time, create_by, update_time, update_by, region_id, country_id, province_id, city_id, area_id, enterprise_id, stock_house_id, region_code, region_parent_code, grain_amount, oil_amount, is_area from plan_reserve_scale
+    </sql>
+    <select id="queryScaleDtos" resultType="com.sydata.reserve.scale.dto.PlanReserveScaleDto">
+        SELECT
+            id as regionCode,
+            name as regionName,
+            '0' as grainAmount,
+            '0' as oilAmount,
+            parent_id as regionParentCode
+        FROM
+            org_region
+        WHERE
+            province_id = '440000'
+    </select>
+    <select id="pageScaleData" resultType="com.sydata.reserve.scale.domain.PlanReserveScale">
+        SELECT
+            id,
+            remarks,
+            <if test="param.regionParentCode != null and param.regionParentCode != '' and param.regionParentCode == '440000'" >
+                '440000' as region_code,
+                sum(grain_amount) as grain_amount,
+                sum(oil_amount) as oil_amount,
+            </if>
+            <if test="param.regionParentCode == null or param.regionParentCode == ''" >
+                min(region_code) as region_code ,
+                sum(grain_amount) as grain_amount,
+                sum(oil_amount) as oil_amount,
+            </if>
+            region_parent_code,
+            is_area,
+            create_by,
+            create_time,
+            update_by,
+            update_time,
+            region_id,
+            country_id,
+            province_id,
+            city_id,
+            area_id,
+            enterprise_id,
+            stock_house_id
+        FROM
+            plan_reserve_scale
+        <where>
+            <if test="param.regionParentCode != null and param.regionParentCode != '' and param.regionParentCode != '440000'">
+                and (region_code = #{param.regionParentCode}
+                or
+                region_parent_code = #{param.regionParentCode} )
+            </if>
+            <if test="param.regionParentCode != null and param.regionParentCode != '' and param.regionParentCode == '440000'">
+                and region_code = #{param.regionParentCode}
+            </if>
+            <if test="param.regionParentCode == null or param.regionParentCode == ''" >
+                and (region_parent_code = '440000' or region_code = '440000')
+            </if>
+            <if test="param.ids != null and param.ids.size > 0" >
+                and id in
+                <foreach collection="param.ids" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+        <if test="param.regionParentCode != null and param.regionParentCode != '' and param.regionParentCode == '440000'" >
+            group by country_id
+        </if>
+        <if test="param.regionParentCode == null or param.regionParentCode == ''" >
+            group by region_code
+        </if>
+        ORDER BY
+            region_code ASC
+    </select>
+
+
+</mapper>

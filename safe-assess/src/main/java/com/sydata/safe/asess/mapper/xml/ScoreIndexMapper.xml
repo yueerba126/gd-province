@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.ScoreIndexMapper">
+
+    <update id="assess">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_score_index set
+            assess_score = #{item.assessScore},
+            assess_minus_cause = #{item.assessMinusCause}
+            where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

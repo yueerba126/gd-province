@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.reserve.mapper.GrainPurSaleMangeMapper">
+    <sql id="commonWhere1">
+         a.lsxzdm in ("121","122","123") and a.czbz != 'd'
+    </sql>
+    <sql id="commonWhere2">
+         b.lsxzdm in ("121","122","123") and a.czbz != 'd'
+    </sql>
+
+    <select id="queryRealtimeInventoryList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.RealAndPlanningQuantityVo">
+        select
+        <if test=" null != dwdm ">
+            a.enterprise_id dwdm,
+        </if>
+        <if test=" null != xzqhdm ">
+            a.region_id xzqhdm,
+        </if>
+        a.lsxzdm,round(sum(a.sjsl/1000/10000),4) quantity
+        from trade_stock_grain_newest a
+        <where>
+            <include refid="commonWhere1"></include>
+            <if test=" null != dwdm ">
+                and a.enterprise_id = #{dwdm}
+            </if>
+            <if test=" null != xzqhdm">
+                and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+            </if>
+        </where>
+        group by lsxzdm
+    </select>
+
+    <select id="queryReservePlanList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.RealAndPlanningQuantityVo">
+        select
+        <if test=" null != dwdm ">
+            a.jhzddw dwdm,
+        </if>
+        <if test=" null != xzqhdm ">
+            b.xzqhdm xzqhdm,
+        </if>
+        a.lsxzdm,round(sum(a.sl/10000),4) quantity
+        from
+        apparitor_reserve_plan a
+        inner join apparitor_reserve_scale b on a.id = b.cbjh_id
+        <where>
+            <include refid="commonWhere1"></include>
+            <if test=" null != dwdm ">
+                and a.jhzddw = #{dwdm}
+            </if>
+            <if test=" null != xzqhdm">
+                and b.xzqhdm like concat(trim(trailing '0' from #{xzqhdm}),"%")
+            </if>
+        </where>
+        group by lsxzdm
+    </select>
+
+    <select id="queryPlanToRotateInAndOutList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainWheetSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.RealAndPlanningWheelOutAndInVo">
+        select
+        <if test=" null != dwdm ">
+            a.jhxddw dwdm,
+        </if>
+        <if test=" null != xzqhdm ">
+            c.xzqhdm xzqhdm,
+        </if>
+        date_format(a.jhnd,"%Y") nd,b.lsxzdm,
+        round(sum(b.lhsl/10000),4) quantity from apparitor_rotation_plan a
+        inner join apparitor_rotation_plan_dtl b on a.lhjhdh = b.lhjhdh
+        left join basis_company c on a.jhxddw = c.dwdm
+        <where>
+            <include refid="commonWhere2"></include>
+            <if test=" null != dwdm ">
+                and a.jhzddw = #{dwdm}
+            </if>
+            <if test=" null != xzqhdm">
+                and c.xzqhdm like concat(trim(trailing '0' from #{xzqhdm}),"%")
+            </if>
+            <if test=" null != lhlx">
+                and b.lhlx = #{lhlx}
+            </if>
+        </where>
+        group by b.lsxzdm,a.jhnd
+    </select>
+
+    <select id="queryRealToRotateInAndOutList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainWheetSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.RealAndPlanningWheelOutAndInVo">
+        <if test='lhlx == "1"'>
+            select
+            <if test=" null != dwdm ">
+                a.enterprise_id dwdm,
+            </if>
+            <if test=" null != xzqhdm ">
+                a.region_id xzqhdm,
+            </if>
+            a.lsxzdm,date_format(a.ywrq,"%Y") nd,
+            round(sum(a.jz/1000/10000),4) quantity from trade_in_stock a
+            <where>
+                <include refid="commonWhere1"></include>
+                <if test=" null != dwdm ">
+                    and a.enterprise_id = #{dwdm}
+                </if>
+                <if test=" null != xzqhdm">
+                    and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+                </if>
+            </where>
+            group by a.lsxzdm,a.ywrq
+        </if>
+        <if test='lhlx == "2"'>
+            select
+            <if test=" null != dwdm ">
+                a.enterprise_id dwdm,
+            </if>
+            <if test=" null != xzqhdm ">
+                a.region_id xzqhdm,
+            </if>
+            a.lsxzdm,date_format(a.ywrq,"%Y") nd,
+            round(sum(a.jz/1000/10000),4) quantity from trade_out_stock a
+            <where>
+                <include refid="commonWhere1"></include>
+                <if test=" null != dwdm ">
+                    and a.enterprise_id = #{dwdm}
+                </if>
+                <if test=" null != xzqhdm">
+                    and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+                </if>
+            </where>
+            group by a.lsxzdm,a.ywrq
+        </if>
+    </select>
+</mapper>

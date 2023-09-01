@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.trade.mapper.StockGrainNewestMapper">
+
+    <select id="reserveStatistics" resultType="com.sydata.trade.vo.StockGrainStatisticsVo">
+        select
+        stock_house_id,
+        sum(sjsl) sjsl,
+        sum(jjsl) jjsl
+        from trade_stock_grain_newest
+        <where>
+            stock_house_id in
+            <foreach collection="stockHouseIds" item="stockHouseId" open="(" separator="," close=")">
+                #{stockHouseId}
+            </foreach>
+
+            <if test="foodNatureCodes != null and foodNatureCodes.size > 0">
+                and lsxzdm in
+                <foreach collection="foodNatureCodes" item="foodNatureCode" open="(" separator="," close=")">
+                    #{foodNatureCode}
+                </foreach>
+            </if>
+        </where>
+        group by stock_house_id
+    </select>
+
+    <select id="getCfdm" resultType="java.lang.String">
+        SELECT
+            b.cfbh
+        FROM
+            basis_cargo a
+                LEFT JOIN basis_granary b ON a.ajdm = b.ajdh
+            <where>
+                <if test="hwdm != null">
+                    a.hwdm = #{hwdm}
+                </if>
+            </where>
+
+    </select>
+</mapper>

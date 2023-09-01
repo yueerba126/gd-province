@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.basis.mapper.CompanyMapper">
+
+
+    <select id="qualityCheck" resultType="com.sydata.basis.dto.CompanyQualityCheckDto">
+        select
+        a.id,
+        a.kqs,
+        a.cfs,
+        a.ygs,
+        count(distinct b.id) as sckqs,
+        count(distinct c.id) as sccfs,
+        count(distinct d.id) as scygs
+        from basis_company a
+        left join basis_stock_house b on b.enterprise_id = a.id
+        left join basis_warehouse c on c.enterprise_id = a.id
+        left join basis_tank d on d.enterprise_id = a.id
+        where a.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by a.id
+    </select>
+</mapper>

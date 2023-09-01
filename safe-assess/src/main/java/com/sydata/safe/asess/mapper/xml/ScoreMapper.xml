@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.ScoreMapper">
+
+    <select id="groupPage" resultType="com.sydata.safe.asess.vo.ScoreGroupVo">
+        select
+        template_id,
+        template_name,
+        template_year,
+        organize_id,
+        dept_id,
+        count(1) as count,
+        sum(if(state = '待提交',1,0)) await_submit_count,
+        sum(if(state = '待评分',1,0)) await_score_count,
+        sum(if(state = '已评分',1,0)) score_count
+        from safe_assess_score
+        <where>
+            <if test="param.templateName != null and param.templateName != ''">
+                and template_name like CONCAT(#{param.templateName},'%')
+            </if>
+
+            <if test="param.templateYear != null and param.templateYear != ''">
+                and template_year like CONCAT(#{param.templateYear},'%')
+            </if>
+
+            <if test="param.reviewId != null and param.reviewId != ''">
+                and review_id = #{param.reviewId}
+            </if>
+
+            <if test="param.organizeId != null and param.organizeId != ''">
+                and organize_id = #{param.organizeId}
+            </if>
+
+            <if test="param.reviewId == null">
+                and dept_id = #{param.deptId}
+            </if>
+        </where>
+        group by template_id,dept_id
+        order by update_time desc
+    </select>
+
+    <update id="regionBind">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update safe_assess_score set
+            org_assess_id = #{item.orgAssessId},
+            state = #{item.state}
+            where review_id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

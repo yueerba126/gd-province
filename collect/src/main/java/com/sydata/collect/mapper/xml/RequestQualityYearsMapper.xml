@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.collect.mapper.RequestQualityYearsMapper">
+
+
+    <update id="statistics">
+        update collect_request_quality_years
+        <set>
+            total = total + #{total},
+            success = success + #{success},
+            fail = fail + #{fail}
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="report" resultType="com.sydata.collect.vo.CollectQualityVo">
+        SELECT province_id,
+        city_id,
+        area_id,
+        enterprise_id,
+        stock_house_id,
+        api_code,
+        sum(total) total,
+        sum(success) success,
+        sum(fail) fail,
+        round(sum(success) / sum(total),2) * 100 success_rate,
+        round(sum(fail) / sum(total),2) * 100 fail_rate
+        FROM collect_request_quality_years
+        <where>
+            years = #{param.years}
+            <if test="param.provinceId != null and param.provinceId != ''">
+                and province_id = #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != ''">
+                and city_id = #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != ''">
+                and area_id = #{param.areaId}
+            </if>
+            <if test="param.enterpriseId != null and param.enterpriseId != ''">
+                and enterprise_id = #{param.enterpriseId}
+            </if>
+            <if test="param.stockHouseId != null and param.stockHouseId != ''">
+                and stock_house_id = #{param.stockHouseId}
+            </if>
+        </where>
+        GROUP BY
+        <if test="param.partition == 1">
+            province_id
+        </if>
+        <if test="param.partition == 2">
+            city_id
+        </if>
+        <if test="param.partition == 3">
+            area_id
+        </if>
+        <if test="param.partition == 4">
+            enterprise_id
+        </if>
+        <if test="param.partition == 5">
+            stock_house_id
+        </if>
+
+        <if test="param.details != null and param.details">
+            ,api_code
+        </if>
+    </select>
+
+    <select id="listByStockHouseIds" resultType="com.sydata.collect.domain.RequestQualityYears">
+        select stock_house_id, api_code, sum(total) total, sum(success) success, sum(fail) fail
+        from collect_request_quality_years
+        where stock_house_id in
+        <foreach collection="stockHouseIds" item="stockHouseId" open="(" separator="," close=")">
+            #{stockHouseId}
+        </foreach>
+        and api_code in
+        <foreach collection="apiCodes" item="apiCode" open="(" separator="," close=")">
+            #{apiCode}
+        </foreach>
+        group by stock_house_id,api_code
+    </select>
+</mapper>

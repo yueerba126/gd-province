@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.reserve.mapper.GrainInfoStatisticsMapper">
+    <sql id="commonWhere1">
+         a.czbz != 'd'
+    </sql>
+    <select id="queryRealtimeInventoryByMaterialList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.GrainMaterialStatisticsVo">
+        select
+        <if test=" null != dwdm ">
+            a.enterprise_id dwdm,
+        </if>
+        <if test=" null != kqdm ">
+            a.stock_house_id kqdm,
+        </if>
+        <if test=" null != xzqhdm ">
+            a.region_id xzqhdm,
+        </if>
+        rpad(substr(a.lspzdm,1,3),7,0) lspzdm,round(sum(a.sjsl/1000/10000),4) grainQuantity
+        from trade_stock_grain_newest a
+        <where>
+            <include refid="commonWhere1"></include>
+            <if test=" null != dwdm ">
+                and a.enterprise_id = #{dwdm}
+            </if>
+            <if test=" null != kqdm">
+                and a.stock_house_id = #{kqdm}
+            </if>
+            <if test=" null != xzqhdm">
+                and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+            </if>
+        </where>
+        group by rpad(substr(a.lspzdm,1,3),7,0)
+        order by rpad(substr(a.lspzdm,1,3),7,0) asc
+    </select>
+
+    <select id="queryRealtimeInventoryByHarvestList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.GrainHarvestStatisticsVo">
+        select
+        <if test=" null != dwdm ">
+            a.enterprise_id dwdm,
+        </if>
+        <if test=" null != kqdm ">
+            a.stock_house_id kqdm,
+        </if>
+        <if test=" null != xzqhdm ">
+            a.region_id xzqhdm,
+        </if>
+        a.shnd shnd,round(sum(a.sjsl/1000/10000),4) grainQuantity
+        from trade_stock_grain_newest a
+        <where>
+            <include refid="commonWhere1"></include>
+            <if test=" null != dwdm ">
+                and a.enterprise_id = #{dwdm}
+            </if>
+            <if test=" null != kqdm">
+                and a.stock_house_id = #{kqdm}
+            </if>
+            <if test=" null != xzqhdm">
+                and a.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+            </if>
+            and a.shnd is not null
+        </where>
+        group by a.shnd
+        order by a.shnd desc
+    </select>
+
+    <select id="queryMaterialPriceTrendList"
+            parameterType="com.sydata.dostrict.reserve.param.GrainSelectParam"
+            resultType="com.sydata.dostrict.reserve.vo.MaterialPriceTrendStatisticsVo">
+        select
+        <if test=" null != dwdm ">
+            b.enterprise_id dwdm,
+        </if>
+        <if test=" null != kqdm ">
+            b.stock_house_id kqdm,
+        </if>
+        <if test=" null != xzqhdm ">
+            b.region_id xzqhdm,
+        </if>
+        rpad(substr(b.lspzdm,1,3),7,0) lspzdm,
+        date_format(a.jssj,"%y-%m") bizDate,
+        round(sum(a.jsje)/sum(jssl),6) price
+        from trade_in_stock_settlement a
+        left join trade_in_stock b on a.hwdm = b.hwdm and a.rkjsdh = b.rkjsdh
+        <where>
+            <include refid="commonWhere1"></include>
+            <if test=" null != dwdm ">
+                and b.enterprise_id = #{dwdm}
+            </if>
+            <if test=" null != kqdm">
+                and b.stock_house_id = #{kqdm}
+            </if>
+            <if test=" null != xzqhdm">
+                and b.region_id like concat(trim(trailing '0' from #{xzqhdm}),"%")
+            </if>
+        </where>
+        group by rpad(substr(b.lspzdm,1,3),7,0),date_format(a.jssj,"%y-%m")
+        order by date_format(a.jssj,"%y-%m") desc,rpad(substr(b.lspzdm,1,3),7,0) asc
+    </select>
+</mapper>

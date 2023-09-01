@@ -1,0 +1,287 @@
+server:
+  shutdown: graceful
+  port: 8181
+  compression:
+    enabled: true
+  undertow:
+    direct-buffers: true
+    threads:
+      io: 16
+      worker: 256
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    logfile:
+      external-file: ./logs/${spring.application.name}.log
+    health:
+      show-details: always
+
+lock4j:
+  expire: 30000
+  acquire-timeout: 3000
+  retry-interval: 100
+  lock-key-prefix: ${spring.application.name}:lock4j
+
+spring:
+  main:
+    allow-circular-references: true
+  profiles:
+    active: dev
+  application:
+    name: gd-province-platform
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  boot:
+    admin:
+      client:
+        username: ${spring.security.user.name}
+        password: ${spring.security.user.password}
+        instance:
+          metadata:
+            user.name: ${spring.security.user.name}
+            user.password: ${spring.security.user.password}
+  security:
+    user:
+      name: admin
+      password: Password-888
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      driver-class-name: ${db.driverClassname}
+      url: jdbc:mysql://${db.host}:${db.port}/${db.database}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowMultiQueries=true&useAffectedRows=true&rewriteBatchedStatements=true
+      username: ${db.username}
+      password: ${db.password}
+      initialSize: 10
+      minIdle: 10
+      maxActive: 288
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      maxOpenPreparedStatements: 50
+      validationQuery: SELECT 1
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: false
+      maxPoolPreparedStatementPerConnectionSize: 50
+      connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      filters: stat,slf4j
+  redis:
+    database: ${redis.database}
+    host: ${redis.host}
+    port: ${redis.port}
+    password: ${redis.password}
+    timeout: 6s
+    lettuce:
+      shutdown-timeout: 100
+      pool:
+        max-active: 288
+        max-idle: 10
+        min-idle: 5
+        max-wait: 6s
+  task:
+    scheduling:
+      pool:
+        size: 1
+  mvc:
+    async:
+      request-timeout: 3s
+    pathMatch:
+      matching-strategy: ant_path_matcher
+  dynamic:
+    tp:
+      enabled: true
+      enabledBanner: true
+      enabledCollect: false
+      collectorType: logging
+      logPath: ./logs/
+      monitorInterval: 5
+      configType: yml
+      executors:
+        - threadPoolName: taskExecutor
+          corePoolSize: 32
+          maximumPoolSize: 256
+          queueCapacity: 1024
+          queueType: VariableLinkedBlockingQueue
+          rejectedHandlerType: CallerRunsPolicy
+          keepAliveTime: 60
+          allowCoreThreadTimeOut: false
+          threadNamePrefix: taskExecutor
+  flyway:
+    enabled: false
+    encoding: UTF-8
+    locations: classpath:db/migration
+    out-of-order: true
+    cleanDisabled: false
+    sql-migration-prefix: V
+    sql-migration-separator: __
+    sql-migration-suffixes: .sql
+    validate-on-migrate: true
+    baseline-on-migrate: true
+    clean-on-validation-error: false
+  arthas:
+    enabled: false
+
+basic:
+  data:
+    convert:
+      convert-package: com.sydata.,com.baomidou.mybatisplus.
+
+# mybatisPlus配置
+mybatis-plus:
+  typeAliasesPackage: com.sydata.*.domain
+  mapperLocations: classpath*:com/sydata/**/mapper/xml/**Mapper.xml,classpath*:mapper/**/*.xml
+  configuration:
+    cache-enabled: true
+    use-generated-keys: true
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
+  global-config:
+    db-config:
+      update-strategy: IGNORED
+
+# sa-token配置
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  token-style: random-128
+  timeout: 7200
+  activity-timeout: -1
+  is-concurrent: true
+  is-share: false
+  is-log: true
+  is-read-cookie: false
+  is-read-head: true
+
+# retrofit2配置
+retrofit:
+  global-log:
+    enable: true
+    log-level: info
+    log-strategy: basic
+
+# 登录配置
+login:
+  privateKey: MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAIYH0kaJNYSvjCJZg7tXBZ/od9wrnbCM1guD3/H1Qx9J286bPGLWvIdONjZJjmu7TdCbsT596KzMH4r6ezgbzTeaCd4jt6PpviWayh7g+UPTl+ybH263ZDJYvXesu4uRRbb/OZWu9/6pmfZJBKJM+UtisFADBwoxpdiUisRXr8DrAgMBAAECgYAB9QlICGbkqh+UvNPkn2+wlxdw+p4R3uydPG6/vMIfKdfw22l1VAdqvmSiRE61GgYX3r4m2HXWWCC5ydCU0Csd+ArgFBMnNckNF7BvYv+4437Sct3cTu2cj6+OgXrZC7DhOK8Lbizgv2fdJBCpRVcZmYXhClODN+tcu37PWPRjyQJBAP/4/0fP2DjYydzc9kimnENNX7k/J5ZWUtKW2JmI0eeDyJGOAOlOxFSwmiMnzH9Y7zfK+FRn4m0QpeL7mdNVgb0CQQCGC3z3ZXIYFQGpuPmqe+FJNoCpFTJSB1J4egftHkEkj6oQghZzuQf3Hz/Px5zTJQ6xUlU4PNYQZfF2B1EZsHPHAkBjZOR7lhF3wXZg9MwNWeTDnX/WBtfwYIS4kSp6M86N/3YaTvG7poJGAG1ZyVJ3AKmjGIVlARHDF/vSL7CDh2hhAkB735n4tpMdliwXQI3Y8upa0jdMCf6at5GLLJqukkr5EprC7rT49IFb6lD6HynaJmDRlZiThAT+2nat8E0ORHZ5AkBxqLeIkCpViAQZmCSgc7caW7zDOUHKdlpd1Tl7htNBFlforTBWYDQaUxJkOWYeYm4paXZlKBnjsQaG+7TnO/Al
+  publicKey: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGB9JGiTWEr4wiWYO7VwWf6HfcK52wjNYLg9/x9UMfSdvOmzxi1ryHTjY2SY5ru03Qm7E+feiszB+K+ns4G803mgneI7ej6b4lmsoe4PlD05fsmx9ut2QyWL13rLuLkUW2/zmVrvf+qZn2SQSiTPlLYrBQAwcKMaXYlIrEV6/A6wIDAQAB
+  captchaCacheKey: captcha
+  captchaValidTime: 30
+  captchaCacheTime: 300
+  passwordMinLength: 8
+  passwordMaxLength: 30
+  loginFailCacheKey: loginFail
+  loginFailCacheTime: 1800
+  loginFailOnDisableCount: 5
+  disableTime: 1800
+  ignorePaths:
+    - /doc.html
+    - /v3/api-docs
+    - /webjars/css/**
+    - /webjars/js/**
+    - /favicon.ico
+    - /swagger-resources
+    - /org/token/login
+    - /org/token/captcha
+    - /org/token/gds/unified/identity/login
+    - /api/v2022/sfrz
+    - /report/command/receive
+    - /filing/**
+
+# 接口文档配置
+swagger:
+  enabled: true
+
+# 数据权限配置
+data:
+  permission:
+    adminRoleId: 1
+    safeAssessRoleId: 1645233948151910402
+    safeAssessCheckRoleId: 1631630199298854913
+
+# 用户消息配置
+user:
+  message:
+    unreadQueueOvertime: 10
+    unreadQueueMaxCount: 100
+
+# 安全配置
+web:
+  security:
+    digest: digest
+    nonce: nonce
+    requestOvertime: 60
+    requestId: requestId
+
+# 文件存储配置
+file-storage:
+  overtimeAutoDiscardTime: 30
+  fileTypes:
+    - jpg
+    - mp4
+  maxFileSize: 2MB
+
+# 数据上报配置
+report:
+  provinceId: 440000
+  provinceName: 广东省
+  privateKey: MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKoNQtJfjAyYbR0U35vJp5SxiOmZw6yCciGNyE5xg5+qSUF0F7w6LNg2u5EK6JS/ys64msRzqaTv2PJLEgUoNNDxzfIb8k6WC9V7ov5Wcbbjaoq6gu9susnZWL6kUES+x5gKOa/R/WZXKuEUtQdti8ApBhX6m/BH1fATqxbHXcHJAgMBAAECgYBug+/JiQ8boHRJUieAt62RlU/FgYkJtD04UUy8rkk8mw7A2xIR4j0Cx49e1BgTlBHaB1+ODR1TdA0qal9rupWXpCahjI5rWM9fYoqTqKhTaq/7xICH9f3R0TJh7H8exH6gVmlU+uvJrW5GQz9ChujHXm2/fF3rajPjV45klITmAQJBAO0DsFlO8yAVoGPF12VmfZVsDbVfM1Ow4KboduXJxcTH53pUUDAHUsMJUHKMH4og/odypxCg/JZ7CU4kWwdP8S0CQQC3rGkS8FcvmSnUfHc5AHoCAC47NVrVG/GRz/LuN/R49OPKHajjKKIkDBjlD0pT3bAV0AglPEyyIO0+A8aA6RyNAkAIuRYIc2tnRuR8R4/B35/HnA51GmfdMKlT+0JE+sQYlfLjAa9h1SMqonEfhiCzCLvVaFbVudcSAr047wWao0qRAkEArFqTNvxlM/sr74LkdY7m7p2wxEqq87OHGebi9Xt4Y1CZuH3gj1j/3YekjL2uZ8hthepy2k4dQkH3nev5B9q3uQJAOCF6U3fKMDRZzZ9Z+r+kARfcSYepdZ6CLGbd/AlRRAICCkwoBJzRQJTxIN0jGgRWqw6KRKyu8/TrolMXaBjzAQ==
+  publicKey: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqDULSX4wMmG0dFN+byaeUsYjpmcOsgnIhjchOcYOfqklBdBe8OizYNruRCuiUv8rOuJrEc6mk79jySxIFKDTQ8c3yG/JOlgvVe6L+VnG242qKuoLvbLrJ2Vi+pFBEvseYCjmv0f1mVyrhFLUHbYvAKQYV+pvwR9XwE6sWx13ByQIDAQAB
+  countryPublicKey: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCsoiS5Q5CKAT9w5EbZXCxJO/5J2iV3i2HrTW/YcGs2EGeQsQc97EWPdFE1SPXGH5p9TO8nCFRJScj4WeeKUVcuRpzR7czQQ+c6kf6cR9LLQrAiGEMQSk13j/5UsJho23IQDGKWoH18f5aPdX8tJn/o4aR6mMxUY9jdaSKEBck1TQIDAQAB
+  baseUrl: http://121.36.17.6:49880
+  maxRows: 100
+  processThreads: 10
+  maxDelivery: 50
+  timeoutUnit: SECONDS
+  callTimeout: 300
+  connectTimeout: 300
+  readTimeout: 300
+  writeTimeout: 300
+
+# 基础信息配置
+basis:
+  reservesFoodNatureCodes:
+    - 100
+    - 110
+    - 120
+    - 121
+    - 122
+    - 123
+    - 129
+    - 321
+    - 331
+    - 340
+    - 350
+    - 360
+  reservesFoodNatureCodeTypeMap:
+    121: 省
+    122: 市
+    123: 县
+  aerialViewImgWidth: 1920
+  aerialViewImgHeight: 1080
+
+# 缓存配置
+zt:
+  cache:
+    caffeineInitialCapacity: 10240
+    caffeineMaximumSize: 102400
+
+#雪花ID配置
+sequence:
+  workerId: 1
+  dataCenterId: 1
+
+# 海康开放API对接
+hk:
+  host: 210.76.76.136:443
+  protocol: https://
+  path: /artemis
+  appKey: 20580094
+  appSecret: NAAffiKD9mGfKYHl40XU
+  rootId: root000000
+  userAccount: guest01

@@ -1,0 +1,9 @@
+List<ColumnInfo> voInfoList = Lists.newArrayList();
+voInfoList.add(new ColumnInfo("templateStateName","String","状态名称","DataBindDict","templateState","grade_template_state"));
+voInfoList.add(new ColumnInfo("provinceName","String","省名称","DataBindRegion","provinceId"));
+voInfoList.add(new ColumnInfo("cityName","String","市名称","DataBindRegion","cityId"));
+voInfoList.add(new ColumnInfo("areaName","String","区名称","DataBindRegion","areaId"));
+voInfoList.add(new ColumnInfo("xzqhdmName","String","行政区域名称","DataBindRegion","provinceId"));
+voInfoList.add(new ColumnInfo("dwmc","String","企业名称","DataBindCompany","provinceId"));
+voInfoList.add(new ColumnInfo("kqmc","String","库区名称","DataBindStockHouse","provinceId"));
+voInfoList.add(new ColumnInfo("xmlxName","String","项目类型名称","DataBindDict","xmlx","xmlx"));

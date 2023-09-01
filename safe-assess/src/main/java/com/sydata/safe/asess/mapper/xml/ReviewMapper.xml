@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.ReviewMapper">
+
+    <select id="groupPage" resultType="com.sydata.safe.asess.vo.ReviewGroupVo">
+        SELECT
+        id,
+        allot_date,
+        auto_allot,
+        template_id,
+        template_name,
+        template_year,
+        state,
+        dept_id,
+        organize_id,
+        max(lead_total_count) as lead_total_count,
+        max(lead_allot_count) as lead_allot_count,
+        max(cooperate_total_count) as cooperate_total_count,
+        max(cooperate_allot_count) as cooperate_allot_count,
+        count(1) as count,
+        sum(if(state = '待提交',1,0)) await_submit_count,
+        sum(if(state = '待评分',1,0)) await_score_count,
+        sum(if(state = '待考核',1,0)) await_assess_count,
+        sum(if(state = '已考核',1,0)) assess_count
+        from safe_assess_review
+        <where>
+            <if test="param.templateId != null and param.templateId != ''">
+                and template_id = #{param.templateId}
+            </if>
+
+            <if test="param.templateName != null and param.templateName != ''">
+                and template_name like CONCAT(#{param.templateName},'%')
+            </if>
+
+            <if test="param.templateYear != null and param.templateYear != ''">
+                and template_year like CONCAT(#{param.templateYear},'%')
+            </if>
+
+            <if test="param.allotDateBegin != null">
+                and allot_date >= #{param.allotDateBegin}
+            </if>
+
+            <if test="param.allotDateEnd != null">
+                and allot_date &lt;= #{param.allotDateEnd}
+            </if>
+
+            <if test="param.autoAllot != null and param.templateYear != ''">
+                and auto_allot = #{param.autoAllot}
+            </if>
+
+            <if test="param.templateId == null and param.organizeId != null and param.organizeId != ''">
+                and organize_id = #{param.organizeId}
+            </if>
+        </where>
+        group by template_id,dept_id
+        order by update_time desc
+    </select>
+
+    <update id="operationDeptAssessCount">
+        update safe_assess_review set
+        dept_submit_count = dept_submit_count + #{count},
+        state = if(dept_total_count = dept_submit_count, '待考核', '待评分')
+        where id = #{id}
+        and dept_submit_count + #{count} >= 0 and dept_submit_count + #{count} &lt;= dept_total_count
+        and state in ('待考核','待评分')
+    </update>
+
+</mapper>

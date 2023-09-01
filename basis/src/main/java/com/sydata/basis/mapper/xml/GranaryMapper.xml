@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.basis.mapper.GranaryMapper">
+
+
+    <select id="qualityCheck" resultType="com.sydata.basis.dto.GranaryQualityCheckDto">
+        select
+        a.id,
+        count(b.id) as hws
+        from basis_granary a
+        left join basis_cargo b on b.ajdm = a.id
+        where a.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by a.id
+    </select>
+</mapper>

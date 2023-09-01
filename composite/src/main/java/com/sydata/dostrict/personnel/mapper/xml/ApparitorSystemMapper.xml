@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.personnel.mapper.ApparitorSystemMapper">
+
+    <resultMap type="com.sydata.dostrict.personnel.domain.ApparitorSystem" id="ApparitorSystemResult">
+        <result property="id" column="id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="fileTypeId" column="file_type_id"/>
+        <result property="fileName" column="file_name"/>
+        <result property="number" column="number"/>
+        <result property="remark" column="remark"/>
+        <result property="releaseId" column="release_id"/>
+        <result property="releaseTime" column="release_time"/>
+        <result property="billStatus" column="bill_status"/>
+        <result property="fileAttachment" column="file_attachment"/>
+        <result property="dwmc" column="dwmc"/>
+        <result property="dwdm" column="dwdm"/>
+    </resultMap>
+
+    <sql id="selectApparitorSystemVo">
+        select id, release_id , release_time ,  bill_status ,create_by, create_time, update_by, update_time, tenant_id, enterprise_id, region_id, country_id, province_id, city_id, area_id, stock_house_id, dept_id, file_type_id, file_name, number, remark from apparitor_system
+    </sql>
+
+    <select id="pageData" resultType="com.sydata.dostrict.personnel.vo.ApparitorSystemVo">
+        SELECT
+        main.id as id,
+        main.release_id,
+        main.release_time,
+        main.bill_status,
+        main.create_by,
+        main.create_time,
+        main.update_by,
+        main.update_time,
+        main.tenant_id,
+        main.enterprise_id,
+        main.region_id,
+        main.country_id,
+        main.province_id,
+        main.city_id,
+        main.area_id,
+        main.stock_house_id,
+        main.dept_id,
+        main.file_type_id,
+        main.file_name,
+        main.file_attachment,
+        main.number,
+        main.remark,
+        main.dwdm,
+        main.dwmc
+        FROM
+        apparitor_system main
+        LEFT JOIN apparitor_system_zoning zoning ON main.id = zoning.system_id
+        <where>
+            <if test="param.deptId != null and param.deptId != '' ">
+                and main.dept_id = #{param.deptId}
+            </if>
+            <if test="param.fileTypeId != null and param.fileTypeId != '' ">
+                and main.file_type_id = #{param.fileTypeId}
+            </if>
+            <if test="param.fileName != null and param.fileName != '' ">
+                and main.file_name like  concat('%', #{param.fileName}, '%')
+            </if>
+            <if test="param.number != null and param.number != '' ">
+                and main.number like concat('%', #{param.number}, '%')
+            </if>
+            <if test="param.dwdm != null and param.dwdm != '' ">
+                and main.dwdm = #{param.dwdm}
+            </if>
+            <if test="param.dwmc != null and param.dwmc != '' ">
+                and main.dwmc like concat('%', #{param.dwmc}, '%')
+            </if>
+            <if test="param.releaseId != null and param.releaseId != '' ">
+                and main.release_id = #{param.releaseId}
+            </if>
+            <if test="param.billStatus != null and param.billStatus != '' ">
+                and main.bill_status = #{param.billStatus}
+            </if>
+            <if test="param.mainRegionId != null and param.mainRegionId != '' ">
+                and (
+                main.region_id = #{param.mainRegionId}
+                or (zoning.region_id = #{param.mainRegionId} and  main.bill_status = '2' )
+                <if test="param.regionId != null and param.regionId != '' ">
+                    or (zoning.region_id = #{param.regionId} and  main.bill_status = '2')
+                </if>
+                )
+            </if>
+            <if test="param.regionId != null and param.regionId != '' ">
+                and (zoning.region_id = #{param.regionId}  and  main.bill_status = '2')
+            </if>
+            and main.bill_status != '9'
+        </where>
+        group by main.id
+        order by main.id desc
+    </select>
+
+    <select id="queryFileStorage" resultType="com.sydata.common.file.domain.FileStorage"
+            parameterType="java.lang.String">
+        SELECT * FROM common_file_storage WHERE id =  #{fileId}
+    </select>
+
+
+
+</mapper>

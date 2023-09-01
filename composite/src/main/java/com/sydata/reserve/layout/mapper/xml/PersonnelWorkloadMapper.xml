@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.reserve.layout.mapper.PersonnelWorkloadMapper">
+    <select id="pageWorkload" resultType="com.sydata.reserve.layout.vo.PersonnelWorkloadVo">
+        SELECT
+            jydw,
+            jysj,
+            count( jydw ) AS wcbgs
+        FROM
+            manage_quality_inspection
+        <where>
+            <if test="param.countryId != null and param.countryId != '' and param.countryId != '-1' ">
+                and country_id = #{param.countryId}
+            </if>
+            <if test="param.provinceId != null and param.provinceId != '' and param.provinceId != '-1' ">
+                and province_id = #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != '' and param.cityId != '-1' ">
+                and city_id = #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != '' and param.areaId != '-1' ">
+                and area_id = #{param.areaId}
+            </if>
+            <if test="pageParam.jydw != null and pageParam.jydw != '' ">
+                and jydw  like CONCAT(#{pageParam.jydw},'%')
+            </if>
+            <if test="pageParam.beginUpdateTime != null">
+                and jysj >= #{param.beginUpdateTime}
+            </if>
+            <if test="pageParam.endUpdateTime != null">
+                and jysj &lt;=  #{param.endUpdateTime}
+            </if>
+            and jysj is not null
+        </where>
+        GROUP BY
+            jydw,
+            jysj
+            order bY jysj DESC
+
+    </select>
+    <select id="monthlyReport" resultType="com.sydata.reserve.layout.vo.MonthlyReportVo">
+        SELECT
+            DATE_FORMAT(jysj, '%Y-%m') as ny,
+            jydw,
+            count(jydw) AS wcbgs,
+            count( if(jylb = '01' ,jylb , NULL)) AS wcrkbgs,
+            count( if(jylb = '02' ,jylb , NULL)) AS wcckbgs,
+            count( if(jylb = '03' ,jylb , NULL)) AS sywpj,
+            count( if(jylb = '04' ,jylb , NULL)) AS jywpj,
+            count( if(jylb = '05' ,jylb , NULL)) AS rccj,
+            count( if(jylb = '06' ,jylb , NULL)) AS ydjc,
+            count( if(jylb = '07' ,jylb , NULL)) AS symknjc,
+            count( if(jylb = '08' ,jylb , NULL)) AS jymknjc
+        FROM
+            manage_quality_inspection
+        <where>
+            <if test="param.countryId != null and param.countryId != '' and param.countryId != '-1' ">
+                and country_id = #{param.countryId}
+            </if>
+            <if test="param.provinceId != null and param.provinceId != '' and param.provinceId != '-1' ">
+                and province_id = #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != '' and param.cityId != '-1' ">
+                and city_id = #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != '' and param.areaId != '-1' ">
+                and area_id = #{param.areaId}
+            </if>
+            <if test="pageParam.beginQueryDate != null">
+                and jysj >= #{pageParam.beginQueryDate}
+            </if>
+            <if test="pageParam.endQueryDate != null">
+                and jysj &lt;=  #{pageParam.endQueryDate}
+            </if>
+            and jysj is not null
+        </where>
+        group by jydw,DATE_FORMAT(jysj, '%Y-%m')
+        order by jysj desc
+    </select>
+</mapper>

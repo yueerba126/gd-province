@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.reserve.manage.mapper.PlanManageAuditMapper">
+
+    <resultMap type="com.sydata.reserve.manage.domain.PlanManageAudit" id="PlanManageAuditResult">
+        <result property="id"    column="id"    />
+        <result property="mainCode"    column="main_code"    />
+        <result property="planTenantName"    column="plan_tenant_name"    />
+        <result property="jhxddw"    column="jhxddw"    />
+        <result property="jhnd"    column="jhnd"    />
+        <result property="lhjhdh"    column="lhjhdh"    />
+        <result property="jhmc"    column="jhmc"    />
+        <result property="managementStyle"    column="management_style"    />
+        <result property="managementStyleName"    column="management_style_name"    />
+        <result property="jhwh"    column="jhwh"    />
+        <result property="planInQty"    column="plan_in_qty"    />
+        <result property="planOutQty"    column="plan_out_qty"    />
+        <result property="lsxzdm"    column="lsxzdm"    />
+        <result property="jhxdsj"    column="jhxdsj"    />
+        <result property="kszxrq"    column="kszxrq"    />
+        <result property="jzzxrq"    column="jzzxrq"    />
+        <result property="billStatus"    column="bill_status"    />
+        <result property="billStatusName"    column="bill_status_name"    />
+        <result property="planStatus"    column="plan_status"    />
+        <result property="planStatusName"    column="plan_status_name"    />
+        <result property="remark"    column="remark"    />
+        <result property="mainId"    column="main_id"    />
+    </resultMap>
+
+    <sql id="selectPlanManageAuditVo">
+        select id, main_code, plan_tenant_name, jhxddw, jhnd, lhjhdh, jhmc, management_style, management_style_name, jhwh, plan_in_qty, plan_out_qty, lsxzdm, jhxdsj, kszxrq, jzzxrq, bill_status, bill_status_name, plan_status, plan_status_name, remark, create_time, create_by, update_time, update_by, region_id, country_id, province_id, city_id, area_id, enterprise_id, stock_house_id, main_id from plan_manage_audit
+    </sql>
+    <select id="pageData" resultType="com.sydata.reserve.manage.vo.PlanManageAuditVo">
+        SELECT
+            main.*
+        FROM
+            plan_manage_audit main
+            LEFT JOIN plan_manage_audit_dtl detail ON main.id = detail.main_id
+            <where>
+                <if test="param.jhxddw != null and param.jhxddw != '' ">
+                    and main.jhxddw = #{param.jhxddw}
+                </if>
+                <if test="param.jhnd != null and param.jhnd != '' ">
+                    and main.jhnd = #{param.jhnd}
+                </if>
+                <if test="param.lhjhdh != null and param.lhjhdh != '' ">
+                    and main.lhjhdh like concat('%', #{param.lhjhdh}, '%')
+                </if>
+                <if test="param.jhmc != null  and param.jhmc != ''">
+                    and main.jhmc like concat('%', #{param.jhmc}, '%')
+                </if>
+                <if test="param.jhwh != null  and param.jhwh != ''">
+                    and main.jhmc like concat('%', #{param.jhmc}, '%')
+                </if>
+                <if test="param.lsxzdm != null and param.lsxzdm != '' ">
+                    and main.lsxzdm = #{param.lsxzdm}
+                </if>
+                <if test="param.jhxdsj != null">
+                    and main.jhxdsj = #{param.jhxdsj}
+                </if>
+                <if test="param.lhhwdm != null and param.lhhwdm != ''">
+                    and detail.lhhwdm = #{param.lhhwdm}
+                </if>
+                <if test="param.lhlx != null  and param.lhlx != ''">
+                    and detail.lhlx = #{param.lhlx}
+                </if>
+                <if test="param.lhjhdhs != null and param.lhjhdhs.size > 0  ">
+                    and main.lhjhdh in (
+                        <foreach collection="param.lhjhdhs" item="lhjhdh" separator=",">
+                            #{lhjhdh}
+                        </foreach>
+                    )
+                </if>
+            </where>
+        GROUP BY
+            main.id
+        order by main.create_time desc
+    </select>
+
+
+</mapper>

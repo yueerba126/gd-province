@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.trade.mapper.StockGrainMapper">
+
+    <select id="lastUpdateTime" resultType="java.time.LocalDateTime">
+        select
+        max(zhgxsj)
+        from trade_stock_grain
+        where hwdm = #{hwdm} and lspzdm = #{lspzdm} and rcsj = #{rcsj}
+        group by hwdm,lspzdm,rcsj
+        for update
+    </select>
+
+    <select id="qualityCheck" resultType="java.lang.String">
+        select kc.id
+        from (
+            select
+            a.id,
+            max(a.jjsl) as jjsl,
+            sum(rk.jz) as rksl,
+            null as cksl,
+            null as sysl
+            from trade_stock_grain_newest a
+            left join (
+                    select hwdm,lspzdm,ywrq,jz from trade_in_stock
+                    union all
+                    select drhwdm,lspzdm,dcrq,dcsl from trade_transfer_barn
+            ) rk on (rk.hwdm=a.hwdm and rk.lspzdm=a.lspzdm and rk.ywrq between date(a.rcsj) and date(ifnull(a.ccwcsj,'9999-12-31')))
+            group by a.hwdm,a.lspzdm,a.rcsj
+
+	        union all
+
+            select
+            a.id,
+            max(a.jjsl) as jjsl,
+            null as rksl,
+            sum(ck.jz) as cksl,
+            null as sysl
+            from trade_stock_grain_newest a
+            left join (
+                    select hwdm,lspzdm,ywrq,jz from trade_out_stock
+                    union all
+                    select dchwdm,lspzdm,dcrq,dcsl from trade_transfer_barn
+            ) ck on (ck.hwdm=a.hwdm and ck.lspzdm=a.lspzdm and ck.ywrq between date(a.rcsj) and date(ifnull(ccwcsj,'9999-12-31')))
+            group by a.hwdm,a.lspzdm,a.rcsj
+
+            union all
+
+            select
+            a.id,
+            max(a.jjsl) as jjsl,
+            null as rksl,
+            null as cksl,
+            sum(sy.jzsysl) sysl
+            from trade_stock_grain_newest a
+            left join trade_loss sy on (sy.hwdm=a.hwdm and sy.ywrq between date(a.rcsj) and date(ifnull(a.ccwcsj,'9999-12-31')))
+            group by a.hwdm,a.lspzdm,a.rcsj
+        ) kc
+        where kc.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by kc.id
+        having ifnull(max(jjsl),0) != ifnull(sum(rksl),0) - ifnull(sum(cksl),0) - ifnull(sum(sysl),0)
+    </select>
+
+</mapper>

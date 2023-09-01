@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sydata.dashboard.mapper.StoreCapacityMapper">
+
+    <insert id="sync">
+        truncate table dashboard_warehouse_capacity;
+        insert into dashboard_warehouse_capacity
+        (cfdm, cflxdm,sjcr,jfsyrq, lspzdm, lsxzdm, sl,jjsl,region_id,country_id,province_id,city_id,area_id,enterprise_id,stock_house_id)
+        select
+        warehouse.cfdm,
+        warehouse.cflxdm,
+        warehouse.sjcr as sjcr ,
+        warehouse.jfsyrq as jfsyrq ,
+        stock.lspzdm,
+        stock.lsxzdm,
+        ifnull(plan.sl, 0)  sl,
+        ifnull(sum(stock.jjsl),0) / 1000 as jjsl,
+        warehouse.region_id,
+        warehouse.country_id,
+        warehouse.province_id,
+        warehouse.city_id,
+        warehouse.area_id,
+        warehouse.enterprise_id,
+        warehouse.stock_house_id
+        from basis_warehouse warehouse
+        left join basis_granary granary on granary.cfbh = warehouse.id
+        left join basis_cargo cargo on cargo.ajdm = granary.id
+        left join trade_stock_grain_newest stock on stock.hwdm = cargo.id
+        left join admin_reserve_plan plan on stock.lspzdm = plan.lspzdm and stock.lsxzdm = plan.lsxzdm
+        group by warehouse.id
+    </insert>
+
+    <select id="yearLineChartAnalysis"
+            resultType="com.sydata.dashboard.vo.StoreCapacityTypeYearLineVo">
+        select
+        cflxdm,
+        case when jfsyrq >  '1700-01-01' then jjsl else 0 end capacity_before80_year,
+        case when jfsyrq between '1700-01-01' and '1998-01-01' then jjsl else 0 end capacity_before98_year,
+        case when jfsyrq >  '1998-01-01' then jjsl else 0 end capacity_before_now_year
+        from dashboard_warehouse_capacity
+        where stock_house_id  = #{kqdm}
+        group by cflxdm
+
+    </select>
+
+    <select id="selectUseRatioByKqdm" resultType="com.sydata.dashboard.vo.StoreCapacityTypeBarVo">
+        select cflxdm, sum(ifnull(sjcr, 0)) sjcr, sum(ifnull(jjsl, 0)) jjsl
+        from dashboard_warehouse_capacity
+        where stock_house_id  = #{kqdm}
+        group by cflxdm
+    </select>
+
+    <select id="selectUseRatioProvinceAll" resultType="com.sydata.dashboard.vo.StoreCapacityTypeBarVo">
+        select cflxdm, sum(ifnull(sjcr, 0)) sjcr, sum(ifnull(jjsl, 0)) jjsl
+        from dashboard_warehouse_capacity
+        group by cflxdm
+    </select>
+
+    <resultMap id="groupByCflxdmForRegionResultMap" type="com.sydata.dashboard.domain.DashboardWarehouseCapacity">
+        <result column="cflx" property="cflxdm" />
+        <result column="sjcr" property="sjcr" />
+        <result column="jjsl" property="jjsl" />
+    </resultMap>
+
+    <select id="groupByCflxdmForRegion" resultMap="groupByCflxdmForRegionResultMap">
+        select (case  when cflxdm in (10101,10102,10103,10104,10105,10109,10110)
+        then cflxdm else '10199' end) cflx, sum(ifnull(sjcr, 0)) sjcr, sum(ifnull(jjsl, 0)) jjsl
+        from dashboard_warehouse_capacity
+        <where>
+            <if test="provinceId != null and provinceId != ''">
+                province_id = #{provinceId}
+            </if>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id = #{areaId}
+            </if>
+        </where>
+        group by cflx
+        order by cflx
+    </select>
+    <select id="groupByCflxdmForKqdm" resultType="com.sydata.dashboard.domain.DashboardWarehouseCapacity">
+        select (case  when cflxdm in (10101,10102,10103,10104,10105,10109,10110)
+        then cflxdm else '10199' end) cflxdm, sum(ifnull(sjcr, 0)) sjcr, sum(ifnull(jjsl, 0)) jjsl
+        from dashboard_warehouse_capacity
+        <where>
+            <if test="kqdm != null and kqdm != ''">
+                stock_house_id = #{kqdm}
+            </if>
+        </where>
+        group by cflxdm
+    </select>
+    <select id="storePlanStatistics" resultType="com.sydata.dashboard.vo.StorePlanExecuteStatisticsVo">
+        select case lsxzdm when '121' then '省级储备粮' when '122' then '市级储备粮' else '县级储备粮' end lsxzmc, sum(ifnull(jjsl, 0)) jjsl , sum(ifnull(sl, 0)) sl
+        from dashboard_warehouse_capacity
+        <where>
+            lsxzdm in ('121', '122', '123')
+            <if test="provinceId != null and provinceId != ''">
+                and province_id = #{provinceId}
+            </if>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id = #{areaId}
+            </if>
+        </where>
+        group by lsxzdm;
+    </select>
+    <select id="storeRotationStatistics" resultType="com.sydata.dashboard.vo.StoreRotationStatisticsVo">
+        select
+            case
+                lsxzdm when '121' then '省级储备粮'
+            when '122' then '市级储备粮'
+            else '县级储备粮'
+            end lsxzmc,
+            sum(ifnull(case lhlx when '2' then lhsl else 0 end, 0)) lrsl ,
+            sum(ifnull(case lhlx when '1' then lhsl else 0 end, 0)) lcsl
+        from
+        admin_rotation_plan_dtl
+        <where>
+            lsxzdm in ('121', '122', '123')
+            <if test="provinceId != null and provinceId != ''">
+                and province_id = #{provinceId}
+            </if>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id = #{areaId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                and create_time between #{startTime} and #{endTime}
+            </if>
+        </where>
+        group by lsxzdm;
+    </select>
+
+    <select id="storeGrainRotationStatistics" resultType="com.sydata.dashboard.vo.StoreRotationStatisticsVo">
+        select lspzdm, dict.dict_value lspzmc,
+        sum(ifnull(case lhlx when '2' then lhsl else 0 end, 0)) lrsl ,
+        sum(ifnull(case lhlx when '1' then lhsl else 0 end, 0)) lcsl
+
+        from admin_rotation_plan_dtl rotation
+        left join basis_dict dict on dict.dict_type = 'food_variety' and  rotation.lspzdm = dict.dict_key
+        <where>
+            lsxzdm in ('121', '122', '123')
+            <if test="provinceId != null and provinceId != ''">
+                and province_id = #{provinceId}
+            </if>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id = #{areaId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                and create_time between #{startTime} and #{endTime}
+            </if>
+        </where>
+        group by lspzdm;
+    </select>
+
+    <select id="planCompleteDetail" resultType="com.sydata.dashboard.domain.StorePlanCompleteDetail">
+        select
+        city_id,
+        enterprise_id,
+        stock_house_id,
+        lsxzdm,
+        case lsxzdm when '121' then '省级储备粮' when '122' then '市级储备粮' else '县级储备粮' end lsxzmc,
+        case when lspzdm like '112%' then '1120000' when lspzdm like '113%' then '1130000' else '1140000' end lspzdm,
+        case when lspzdm like '112%' then '小麦' when lspzdm like '113%' then '稻谷' else '玉米' end lspzmc,
+        sum(ifnull(jjsl, 0)) stock_qty,
+        sum(ifnull(sl, 0)) plan_qty,
+        ifnull(sl, 0) / ifnull(jjsl, 0) complete_ratio
+
+        from dashboard_warehouse_capacity
+
+        <where>
+            lsxzdm in ('121', '122', '123') and (lspzdm like '112%' or lspzdm like '113%' or lspzdm like '114%')
+            <if test="provinceId != null and provinceId != ''">
+                and province_id = #{provinceId}
+            </if>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id = #{areaId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                and create_time between #{startTime} and #{endTime}
+            </if>
+        </where>
+
+        group by city_id, enterprise_id,stock_house_id, lsxzdm, lspzmc;
+    </select>
+    <select id="countCityWarehouseNum" resultType="com.sydata.dashboard.vo.CountCityWarehouseNumVo">
+        select city_id, count(1) num
+        from basis_warehouse
+        group by city_id
+    </select>
+</mapper>

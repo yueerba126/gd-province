@@ -1,0 +1,58 @@
+db:
+  driverClassname: com.mysql.cj.jdbc.Driver
+  host: localhost
+  port: 3306
+  database: gd-province-platform
+  username: root
+  password: 123456
+
+redis:
+  database: 0
+  host: localhost
+  port: 6379
+  password: Password-888
+
+minio:
+  url: http://localhost:29000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucketName: gd-province-platform
+
+spring:
+  boot:
+    admin:
+      client:
+        enabled: false
+        url: http://localhost:8899/admin
+        instance:
+          service-host-type: ip
+
+xxl-job:
+  enabled: false
+  adminAddresses: http://localhost:8898/gd-job
+  appname: ${spring.application.name}
+  logPath: ./logs/jobhandler
+  logRetentionDays: 30
+  loginIdentity: 7b226964223a312c22757365726e616d65223a2261646d696e222c2270617373776f7264223a226665306264346135623233616132656365376132626631363263353130326435222c22726f6c65223a312c227065726d697373696f6e223a6e756c6c7d
+
+arthas:
+  tunnel-server: ws://localhost:7777/ws
+  telnet-port: -1
+  http-port: -1
+# 省平台下发市平台（库软件）地址
+spt:
+  host: http://localhost:8390
+
+# 广东省统一身份认证配置
+gds-unified-identity:
+  baseUrl: https://xtbg.digitalgd.com.cn
+  clientId: zwrz_gdlkznh
+  clientSecret: b36cAA6CCD7B4bb9hjsg
+  grantType: authorization_code
+  responseType: code
+  scope: all
+  timeoutUnit: SECONDS
+  callTimeout: 300
+  connectTimeout: 300
+  readTimeout: 300
+  writeTimeout: 300

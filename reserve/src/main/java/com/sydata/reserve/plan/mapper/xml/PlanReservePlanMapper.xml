@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.reserve.plan.mapper.PlanReservePlanMapper">
+
+    <resultMap type="com.sydata.reserve.plan.domain.PlanReservePlan" id="PlanReservePlanResult">
+        <result property="id"    column="id"    />
+        <result property="remarks"    column="remarks"    />
+        <result property="planCode"    column="plan_code"    />
+        <result property="planName"    column="plan_name"    />
+        <result property="ylxz"    column="ylxz"    />
+        <result property="amount"    column="amount"    />
+        <result property="beginDate"    column="begin_date"    />
+        <result property="endDate"    column="end_date"    />
+        <result property="ccqy"    column="ccqy"    />
+        <result property="fileAttachment"    column="file_attachment"    />
+        <result property="billStatus"    column="bill_status"    />
+        <result property="isChange"    column="is_change"    />
+        <result property="jhxdsj"    column="jhxdsj"    />
+        <result property="jhnd"    column="jhnd"    />
+        <result property="jhzddw"    column="jhzddw"    />
+        <result property="jhdh"    column="jhdh"    />
+        <result property="mainRotateType"    column="main_rotate_type"    />
+    </resultMap>
+
+    <sql id="selectPlanReservePlanVo">
+        SELECT
+            id,
+            remarks,
+            create_time,
+            create_by,
+            update_time,
+            update_by,
+            region_id,
+            country_id,
+            province_id,
+            city_id,
+            area_id,
+            enterprise_id,
+            stock_house_id,
+            plan_code,
+            plan_name,
+            ylxz,
+            amount,
+            begin_date,
+            end_date,
+            ccqy,
+            file_attachment,
+            bill_status,
+            jhnd,
+            jhxdsj,
+            jhzddw,
+            jhdh,
+            is_change,
+            main_rotate_type
+        FROM
+            plan_reserve_plan
+	</sql>
+    <select id="pageData" resultType="com.sydata.reserve.plan.vo.PlanReservePlanVo">
+         SELECT
+            main.id,
+            main.remarks,
+            main.create_time,
+            main.create_by,
+            main.update_time,
+            main.update_by,
+            main.region_id,
+            main.country_id,
+            main.province_id,
+            main.city_id,
+            main.area_id,
+            main.enterprise_id,
+            main.stock_house_id,
+            main.plan_code,
+            main.plan_name,
+            main.ylxz,
+            main.amount,
+            main.begin_date,
+            main.end_date,
+            main.ccqy,
+            main.file_attachment,
+            main.bill_status,
+            main.jhnd,
+            main.jhxdsj,
+            main.jhzddw,
+            main.jhdh,
+            main.is_change,
+            main.main_rotate_type
+        FROM
+            plan_reserve_plan main
+            left join plan_reserve_plan_dtl detail on main.id = detail.main_id
+            <where>
+                and main.bill_status != 'abolish'
+                <if test="param.planCode != null and param.planCode != ''">
+                    and main.plan_code like CONCAT('%',#{param.planCode},'%')
+                </if>
+                <if test="param.planName != null and param.planName != ''">
+                    and main.plan_name like CONCAT('%',#{param.planName},'%')
+                </if>
+                <if test="param.ylxz != null and param.ylxz != ''">
+                    and main.ylxz = #{param.ylxz}
+                </if>
+                <if test="param.jhxdsj != null">
+                    and main.jhxdsj = #{param.jhxdsj}
+                </if>
+                <if test="param.ccqy != null and param.ccqy != ''">
+                    and main.ccqy = #{param.ccqy}
+                </if>
+                <if test="param.billStatus != null and param.billStatus != ''">
+                    and main.bill_status = #{param.billStatus}
+                </if>
+                <if test="param.lsdjdm != null and param.lsdjdm != ''">
+                    and detail.lsdjdm = #{param.lsdjdm}
+                </if>
+                <if test="param.jhnd != null and param.jhnd != ''">
+                    and main.jhnd = #{param.jhnd}
+                </if>
+                <if test="param.jhzddw != null and param.jhzddw != ''">
+                    and main.jhzddw = #{param.jhzddw}
+                </if>
+                <if test="param.jhdh != null and param.jhdh != ''">
+                    and main.jhdh like CONCAT('%',#{param.jhdh},'%')
+                </if>
+            </where>
+            group by main.id
+            order by main.create_time desc
+    </select>
+
+
+</mapper>

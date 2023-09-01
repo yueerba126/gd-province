@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.basis.mapper.FinanceMapper">
+
+    <select id="reportPages" resultType="com.sydata.basis.vo.FinanceVo">
+        select dwdm,bbsj,bbm,type,stock_house_id
+        from basis_finance
+        <where>
+            <if test="param.enterpriseId != null and param.enterpriseId != ''">
+                and enterprise_id = #{param.enterpriseId}
+            </if>
+
+            <if test="param.bbm != null and param.bbm != ''">
+                and bbm = #{param.bbm}
+            </if>
+
+            <if test="param.type != null and param.type != ''">
+                and type = #{param.type}
+            </if>
+        </where>
+        GROUP BY dwdm,bbsj,bbm
+    </select>
+</mapper>

@@ -1,0 +1,1025 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dashboard.mapper.StockAffiliationMapper">
+
+    <!--实时库存报表-->
+    <sql id="selectRealTimeStockAffiliation">
+        select
+        a.lspzlb,
+        a.lspzdm,
+        a.lsxzdm,
+        sum(a.sjsl) as sjsl,
+        sum(a.jjsl) as jjsl,
+        a.lqxzqhdm as lqxzqhdm,
+        if(a.lqxzqhdm is null,a.region_id,b.id) as region_id,
+        if(a.lqxzqhdm is null,a.country_id,b.country_id) as country_id,
+        if(a.lqxzqhdm is null,a.province_id,b.province_id) as province_id,
+        if(a.lqxzqhdm is null,a.city_id,b.city_id) as city_id,
+        if(a.lqxzqhdm is null,a.area_id,b.area_id) as area_id,
+        a.enterprise_id,
+        a.stock_house_id
+        from trade_stock_grain_newest a
+        left join org_region b on b.id = a.lqxzqhdm
+        group by a.stock_house_id, a.lspzdm, a.lsxzdm, a.lqxzqhdm
+    </sql>
+
+    <!--实时储备粮库存报表-->
+    <sql id="selectRealTimeReserveStockAffiliation">
+        select
+        concat_ws(':', a.stock_house_id, a.lspzdm, a.lsxzdm, a.lqxzqhdm) as id,
+        a.lspzlb,
+        a.lspzdm,
+        a.lsxzdm,
+        sum(a.sjsl) as sjsl,
+        sum(a.jjsl) as jjsl,
+        a.lqxzqhdm as lqxzqhdm,
+        b.id as region_id,
+        b.country_id as country_id,
+        b.province_id as province_id,
+        b.city_id as city_id,
+        b.area_id as area_id,
+        a.enterprise_id,
+        a.stock_house_id
+        from trade_stock_grain_newest a
+        inner join org_region b on b.id = a.lqxzqhdm
+        where a.lqxzqhdm IS NOT NULL
+        group by a.stock_house_id, a.lspzdm, a.lsxzdm, a.lqxzqhdm
+    </sql>
+
+    <insert id="syncStockAffiliation">
+        truncate table dashboard_stock_affiliation;
+        insert into dashboard_stock_affiliation(lspzlb,lspzdm,lsxzdm,sjsl,jjsl,lqxzqhdm,region_id,country_id,province_id,city_id,area_id,enterprise_id,stock_house_id)
+        <include refid="selectRealTimeStockAffiliation"/>
+    </insert>
+
+    <select id="reserveTotalStock" resultType="com.sydata.dashboard.vo.NatureStockVo">
+        SELECT
+        sum( IF ( dict.sort_type_three = '1', affiliation.jjsl, 0 ) ) / 1000 / 10000 AS jjslGrain,
+        sum( IF ( dict.sort_type_three = '2', affiliation.jjsl, 0 ) ) / 1000 / 10000 AS jjslOil,
+        sum( affiliation.jjsl ) / 1000 / 10000 AS jjsl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>) AS affiliation
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        where affiliation.lsxzdm in ('123', '122','121' ,'129' , '120' , '331', '100' , '110' , '321' , '350' , '360')
+        <if test="param.provinceId != null and param.provinceId != ''">
+            and affiliation.province_id =  #{param.provinceId}
+        </if>
+        <if test="param.cityId != null and param.cityId != ''">
+            and affiliation.city_id =  #{param.cityId}
+        </if>
+        <if test="param.areaId != null and param.areaId != ''">
+            and affiliation.area_id =  #{param.areaId}
+        </if>
+    </select>
+
+    <select id="cityStocks" resultType="com.sydata.dashboard.vo.NatureStockVo">
+        SELECT
+        affiliation.city_id,
+        sum( IF ( dict.sort_type_three = '1', affiliation.jjsl, 0 ) ) / 1000 / 10000 AS jjslGrain,
+        sum( IF ( dict.sort_type_three = '2', affiliation.jjsl, 0 ) ) / 1000 / 10000 AS jjslOil,
+        sum(jjsl) / 1000 / 10000 as jjsl
+        from (<include refid="selectRealTimeReserveStockAffiliation"/>) AS affiliation
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        where affiliation.lsxzdm in ('123', '122','121' ,'129' , '120' , '331', '100' , '110' , '321' , '350' , '360')
+        <if test="param.provinceId != null and param.provinceId != ''">
+            and affiliation.province_id =  #{param.provinceId}
+        </if>
+        <if test="param.cityId != null and param.cityId != ''">
+            and affiliation.city_id =  #{param.cityId}
+        </if>
+        <if test="param.areaId != null and param.areaId != ''">
+            and affiliation.area_id =  #{param.areaId}
+        </if>
+        group by affiliation.city_id
+        order by sum(affiliation.jjsl) desc
+    </select>
+
+    <select id="areaStocks" resultType="com.sydata.dashboard.vo.NatureStockVo">
+        SELECT
+            affiliation.area_id,
+            sum( IF ( dict.sort_type_three = '1', affiliation.jjsl, 0 ) ) / 1000 / 10000 AS jjslGrain,
+            sum( IF ( dict.sort_type_three = '2', affiliation.jjsl, 0 ) ) / 1000 / 10000 AS jjslOil,
+            sum( affiliation.jjsl ) / 1000 / 10000 AS jjsl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>)  AS affiliation
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        WHERE affiliation.lsxzdm in ('123', '122','121' ,'129' , '120' , '331', '100' , '110' , '321' , '350' , '360')
+        <if test="param.provinceId != null and param.provinceId != ''">
+            and affiliation.province_id =  #{param.provinceId}
+        </if>
+        <if test="param.cityId != null and param.cityId != ''">
+            and affiliation.city_id =  #{param.cityId}
+        </if>
+        <if test="param.areaId != null and param.areaId != ''">
+            and affiliation.area_id =  #{param.areaId}
+        </if>
+        GROUP BY
+            affiliation.area_id
+        ORDER BY
+            sum( affiliation.jjsl ) DESC
+    </select>
+
+    <select id="stockHouseStocks" resultType="com.sydata.dashboard.vo.StockAffiliationVo">
+        SELECT
+        affiliation.stock_house_id,
+        sum(affiliation.jjsl) / 1000 / 10000 as sjsl
+        from (<include refid="selectRealTimeReserveStockAffiliation"/>) as affiliation
+        where area_id is not null and affiliation.lsxzdm in ('123', '122','121' ,'129' , '120' , '331', '100' , '110' , '321' , '350' , '360')
+        <if test="param.provinceId != null and param.provinceId != ''">
+            and affiliation.province_id =  #{param.provinceId}
+        </if>
+        <if test="param.cityId != null and param.cityId != ''">
+            and affiliation.city_id =  #{param.cityId}
+        </if>
+        <if test="param.areaId != null and param.areaId != ''">
+            and affiliation.area_id =  #{param.areaId}
+        </if>
+        group by stock_house_id
+        order by sum(jjsl) desc
+    </select>
+
+    <select id="varietyStocks" resultType="com.sydata.dashboard.vo.VarietyStockVo">
+        SELECT
+        dict.sort_type_two as lspzfl,
+        sum(affiliation.jjsl) /1000 / 10000 as jjsl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>) AS affiliation
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        where dict.sort_type_three = '1'
+        and affiliation.lsxzdm in ('123', '122','121' ,'129' , '120' , '331', '100' , '110' , '321' , '350' , '360')
+        <if test="param.provinceId != null and param.provinceId != ''">
+            and affiliation.province_id =  #{param.provinceId}
+        </if>
+        <if test="param.cityId != null and param.cityId != ''">
+            and affiliation.city_id =  #{param.cityId}
+        </if>
+        <if test="param.areaId != null and param.areaId != ''">
+            and affiliation.area_id =  #{param.areaId}
+        </if>
+        GROUP BY dict.sort_type_two
+        ORDER BY sum(affiliation.jjsl) desc
+    </select>
+
+    <select id="natureStocks" resultType="com.sydata.dashboard.vo.StockAffiliationVo">
+        SELECT
+        lsxzdm,
+        sum(jjsl) / 1000 / 10000 as sjsl
+        from dashboard_stock_affiliation
+        <where>
+            <if test="cityId != null and cityId != ''">
+                and city_id  = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id  = #{areaId}
+            </if>
+            AND jjsl != 0
+        </where>
+        group by lsxzdm
+    </select>
+
+    <select id="varietyNatureStocks" resultType="com.sydata.dashboard.vo.GrainAssortmentOverviewVo">
+        SELECT
+        lspzlb,lsxzdm,
+        sum(jjsl) / 1000 / 10000 as sjsl
+        from dashboard_stock_affiliation
+        <if test="city != null and city != ''">
+            where lqxzqhdm like   concat(#{city,jdbcType=VARCHAR},'%')
+        </if>
+        group by lspzlb,lsxzdm
+    </select>
+
+    <select id="scheduledReceipt" resultType="com.sydata.dashboard.vo.ScheduledReceiptVo">
+        select LSXZDM,sum(jz) / 1000 / 10000 as jz from trade_in_stock
+        <where>
+            <if test="cityId != null and cityId != ''">
+                and city_id  = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id  = #{areaId}
+            </if>
+        </where>
+        GROUP BY LSXZDM ORDER BY LSXZDM
+    </select>
+
+    <select id="quantityDelivered" resultType="com.sydata.dashboard.vo.QuantityDeliveredVo">
+        select LSXZDM,sum(jz) / 1000 / 10000 as jz from trade_out_stock
+        <where>
+            <if test="cityId != null and cityId != ''">
+                and city_id  = #{cityId}
+            </if>
+            <if test="areaId != null and areaId != ''">
+                and area_id  = #{areaId}
+            </if>
+        </where>
+        GROUP BY LSXZDM ORDER BY LSXZDM
+    </select>
+
+
+    <select id="prefecturalInventory" resultType="com.sydata.dashboard.vo.PrefecturalReportVo">
+        SELECT
+            b.city_id AS city,
+            ( SELECT sum( a.jz ) / 1000 FROM trade_out_stock a WHERE a.city_id = b.city_id ) AS byckl,
+            sum( b.jjsl ) / 1000 / 10000 AS sjsl
+        FROM
+            dashboard_stock_affiliation b
+        GROUP BY
+            b.city_id
+        ORDER BY
+            jjsl DESC
+    </select>
+
+    <select id="physicalProportion" resultType="com.sydata.dashboard.vo.PhysicalProportionVo">
+        SELECT					b.city_id as city ,
+                                  (select  sum(a.jjsl) / 1000 / 10000  from dashboard_stock_affiliation a where a.city_id=b.city_id) as kcswbl,
+                                  sum(b.ylcbgmjhsl) / 1000 / 10000 as cbgml
+        from admin_reserve_scale b
+        GROUP BY b.city_id  ORDER BY  ylcbgmjhsl desc
+    </select>
+
+    <select id="Totality" resultType="com.sydata.dashboard.vo.TotalityVo">
+        select count(1) as kdzs,(select count(1) from (
+          select count(1) from trade_stock_grain GROUP BY stock_house_id )	tab		) as sbkds from basis_stock_house
+    </select>
+
+    <select id="repositoryReport" resultType="com.sydata.dashboard.vo.RepositoryReportVo">
+        SELECT
+            b.stock_house_id as kddm ,
+            (select  sum(a.jz) / 1000  from trade_out_stock a where a.stock_house_id=b.stock_house_id) as byckl,
+            sum(b.jjsl) / 1000 / 10000 as sjsl
+        from dashboard_stock_affiliation b
+        GROUP BY b.stock_house_id ORDER BY  jjsl desc
+    </select>
+
+    <select id="warningRanking" resultType="com.sydata.dashboard.vo.WarningVo">
+        select a.dwdm,count(a.dwdm) as monthNum ,
+               (select count(b.dwdm) as dayNum from warn_foodstuff_message b where TO_DAYS(b.warn_date)=TO_DAYS(NOW())  and a.dwdm=b.dwdm
+               ) as dayNum
+        from warn_foodstuff_message a where DATE_FORMAT(a.warn_date,'%Y%m')=DATE_FORMAT(CURDATE(),'%Y%m')  GROUP BY a.dwdm ORDER BY monthNum DESC
+    </select>
+
+    <select id="cityVariety" resultType="com.sydata.dashboard.vo.VarietyVo">
+        SELECT
+            a.city_id as city,a.lspzlb,
+            sum(a.jjsl) / 1000 / 10000 as sjsl
+        from dashboard_stock_affiliation a
+        GROUP BY a.city_id, a.lspzlb
+    </select>
+
+    <select id="kdVariety" resultType="com.sydata.dashboard.vo.VarietyVo">
+        SELECT
+        a.stock_house_id as kddm,a.lspzlb,
+        sum(a.jjsl) / 1000 / 10000 as sjsl
+        from dashboard_stock_affiliation a
+        <if test="city != null and city != ''">
+            where a.lqxzqhdm like   concat(#{city,jdbcType=VARCHAR},'%')
+        </if>
+        GROUP BY a.stock_house_id, a.lspzlb
+    </select>
+    <select id="granaryBasis" resultType="com.sydata.dashboard.vo.GranaryBasisVo">
+        select dwdm,kqdm,kqmc,cfs,ygs,
+        (select count(1) from basis_granary b where b.stock_house_id=kqdm) as ajs,
+        (select count(1) from basis_cargo c where c.stock_house_id=kqdm) as hws
+        from basis_stock_house
+        <where>
+            <if test="kqdm != null and kqdm != ''">
+                and kqdm  = #{kqdm}
+            </if>
+        </where>
+    </select>
+    <select id="getProvinceStock" resultType="com.sydata.dashboard.dto.InventoryMonitoringDto">
+        SELECT
+            lspzlb,
+            sum( jjsl ) / 1000 / 10000 AS sjsl
+        FROM
+            dashboard_stock_affiliation
+        WHERE
+            lsxzdm = 121
+        GROUP BY
+            lspzlb;
+    </select>
+    <select id="getCityStock" resultType="com.sydata.dashboard.dto.InventoryMonitoringDto">
+        SELECT
+            city_id,
+            lspzlb,
+            sum( jjsl ) / 1000 / 10000 AS sjsl
+        FROM
+            dashboard_stock_affiliation
+        WHERE
+            lsxzdm = 122
+        GROUP BY
+            city_id,
+            lspzlb;
+    </select>
+
+    <select id="getTemperature" resultType="com.sydata.dashboard.vo.TemperatureVo">
+        SELECT
+            avg( cfww ) AS cwwd,
+            avg( cfws ) AS cwsd,
+            max( lszgw ) AS zdwd,
+            avg( lspjw ) AS pjwd,
+            min( lszdw ) AS zxwd
+        FROM
+            manage_grain_monitor
+        WHERE
+                id IN (
+                SELECT
+                    id
+                FROM
+                    ( SELECT id, max( jcsj ) FROM manage_grain_monitor WHERE stock_house_id = #{kqdm} GROUP BY hwdm ) tab)
+    </select>
+
+    <select id="libraryChain" resultType="com.sydata.dashboard.vo.LibraryChainVo">
+        <if test="type == 'cf' and type != ''">
+            select id,cfmc as name from basis_warehouse WHERE stock_house_id = #{id}
+        </if>
+        <if test="type == 'aj' and type != ''">
+            select id,ajmc as name  from basis_granary where cfbh = #{id}
+        </if>
+        <if test="type == 'hw' and type != ''">
+            select id,hwmc as name  from basis_cargo where ajdm = #{id}
+        </if>
+    </select>
+    <select id="getPlanDtos" resultType="com.sydata.dashboard.dto.InventoryPlanDto">
+        SELECT
+        dict.dict_key as lspzlb,
+        dict.dict_value as lspzlbmc,
+        plan.province_id as provinceId,
+        plan.city_id as cityId,
+        sum(plan.sl) / 10000 as sjsl
+        FROM
+        admin_reserve_plan plan
+        LEFT JOIN basis_dict basisDict ON basisDict.dict_key = plan.lspzdm
+        AND basisDict.dict_type = 'food_variety'
+        INNER JOIN basis_dict dict ON dict.dict_far_type = basisDict.dict_far_type
+        AND dict.dict_type = 'food_big_variety'
+        <where>
+            <if test="param.nd != null and param.nd != 0" >
+                and plan.jhnd = #{param.nd}
+            </if>
+            and plan.lsxzdm = '121'
+        </where>
+        GROUP BY dict.dict_key
+    </select>
+    <select id="getPlanCityDtos" resultType="com.sydata.dashboard.dto.InventoryPlanDto">
+        SELECT
+        dict.dict_key as lspzlb,
+        dict.dict_value as lspzlbmc,
+        plan.province_id as provinceId,
+        plan.city_id as cityId,
+        sum(plan.sl) / 10000 as sjsl
+        FROM
+        admin_reserve_plan plan
+        LEFT JOIN basis_dict basisDict ON basisDict.dict_key = plan.lspzdm
+        AND basisDict.dict_type = 'food_variety'
+        INNER JOIN basis_dict dict ON dict.dict_far_type = basisDict.dict_far_type
+        AND dict.dict_type = 'food_big_variety'
+        <where>
+            <if test="param.nd != null and param.nd != 0" >
+                and plan.jhnd = #{param.nd}
+            </if>
+            and plan.lsxzdm = '122'
+        </where>
+        GROUP BY dict.dict_key, plan.city_id
+    </select>
+
+    <select id="cargoCal" resultType="com.sydata.dashboard.vo.CargoCalVo">
+        SELECT
+        ( SELECT cfmc FROM basis_warehouse c WHERE c.cfdm = b.cfbh ) AS cfmc,
+        b.ajmc,
+        a.hwmc,
+        a.hwdm
+        FROM
+        basis_cargo a
+        LEFT JOIN basis_granary b ON a.ajdm = b.ajdh
+        WHERE a.stock_house_id = #{kqdm}
+        <if test="ajdm != null and ajdm != ''">
+            and a.ajdm  = #{ajdm}
+        </if>
+        <if test="cfdm != null and cfdm != ''">
+            and b.cfbh  = #{cfdm}
+        </if>
+    </select>
+
+    <select id="cargoCalDtl" resultType="com.sydata.dashboard.vo.CargoCalDtlVo">
+        select
+        a.hwdm,
+        a.lspzdm,
+        a.lsxzdm,
+        a.lsdjdm,
+        a.shnd,
+        sum(a.jjsl) as sjsl
+        from trade_stock_grain_newest a
+        where a.hwdm = #{hwdm}
+        group by a.hwdm,a.lspzdm,a.lsxzdm,a.shnd
+    </select>
+
+    <select id="temperatureCurve" resultType="com.sydata.dashboard.vo.TemperatureVo">
+        SELECT
+        DATE_FORMAT( jcsj, '%Y-%m-%d' ) as jcsj,
+        avg( cfww ) AS cwwd,
+        avg(cfnw) as cfnw,
+        avg( cfws ) AS cwsd,
+        max( lszgw ) AS zdwd,
+        avg( lspjw ) AS pjwd,
+        min( lszdw ) AS zxwd
+        FROM
+        manage_grain_monitor
+        WHERE
+        DATE_FORMAT( jcsj, '%Y%m' )= DATE_FORMAT( CURDATE(), '%Y%m' )
+        <if test="hwdm != null and hwdm != ''">
+            and hwdm  = #{hwdm}
+        </if>
+        <if test="kqdm != null and kqdm != ''">
+            and stock_house_id  = #{kqdm}
+        </if>
+        GROUP BY
+        DATE_FORMAT(
+        jcsj,
+        '%Y-%m-%d')
+        ORDER BY jcsj desc
+    </select>
+
+    <select id="physicalTotalPage" resultType="com.sydata.dashboard.vo.PhysicalInventoryNewVo">
+        SELECT
+        dict.variety_key AS lspz,
+        dict.variety_value AS lspzmc,
+        affiliation.id,
+        affiliation.province_id AS province,
+        affiliation.city_id AS city,
+        affiliation.area_id AS area,
+        affiliation.lsxzdm AS lsxzdm,
+        affiliation.lqxzqhdm AS lqxzqhdm,
+        affiliation.stock_house_id AS stockHouseId,
+        affiliation.enterprise_id AS enterpriseId,
+        sum( affiliation.jjsl ) / 1000 AS zj,
+        sum( affiliation.sjsl ) / 1000 AS sjslzj,
+        sum( IF ( dict.sort_type_one = '1', affiliation.jjsl, 0 ) ) / 1000 + sum( IF ( dict.sort_type_one = '3', affiliation.jjsl, 0 ) ) / 1000 / 0.7 as zhyl,
+        sum( IF ( dict.sort_type_one = '1', affiliation.jjsl, 0 ) ) / 1000 AS ylzj,
+        sum( IF ( dict.sort_type_one = '2', affiliation.jjsl, 0 ) ) / 1000 AS yyzl,
+        sum( IF ( dict.sort_type_one = '3', affiliation.jjsl, 0 ) ) / 1000 AS cplzl,
+        sum( IF ( dict.sort_type_one = '4', affiliation.jjsl, 0 ) ) / 1000 AS cpyzl,
+        sum( IF ( dict.sort_type_one = '5', affiliation.jjsl, 0 ) ) / 1000 AS qtlzl,
+        sum( IF ( dict.sort_type_two = '1', affiliation.jjsl, 0 ) ) / 1000 AS grainxml,
+        sum( IF ( dict.sort_type_two = '2', affiliation.jjsl, 0 ) ) / 1000 AS graindgl,
+        sum( IF ( dict.sort_type_two = '3', affiliation.jjsl, 0 ) ) / 1000 AS grainyml,
+        sum( IF ( dict.sort_type_two = '4', affiliation.jjsl, 0 ) ) / 1000 AS grainddl,
+        sum( IF ( dict.sort_type_two = '5', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyl,
+        sum( IF ( dict.sort_type_two = '6', affiliation.jjsl, 0 ) ) / 1000 AS grainddyy,
+        sum( IF ( dict.sort_type_two = '7', affiliation.jjsl, 0 ) ) / 1000 AS grainhsyy,
+        sum( IF ( dict.sort_type_two = '8', affiliation.jjsl, 0 ) ) / 1000 AS grainczyy,
+        sum( IF ( dict.sort_type_two = '9', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyy,
+        sum( IF ( dict.sort_type_two = '10', affiliation.jjsl, 0 ) ) / 1000 AS grainmfl,
+        sum( IF ( dict.sort_type_two = '11', affiliation.jjsl, 0 ) ) / 1000 AS grainymml ,
+        sum( IF ( dict.sort_type_two = '12', affiliation.jjsl, 0 ) ) / 1000 AS graindml ,
+        sum( IF ( dict.sort_type_two = '13', affiliation.jjsl, 0 ) ) / 1000 AS qtcpl ,
+        sum( IF ( dict.sort_type_two = '14', affiliation.jjsl, 0 ) ) / 1000 AS grainddy ,
+        sum( IF ( dict.sort_type_two = '15', affiliation.jjsl, 0 ) ) / 1000 AS grainhsy ,
+        sum( IF ( dict.sort_type_two = '16', affiliation.jjsl, 0 ) ) / 1000 AS grainczy ,
+        sum( IF ( dict.sort_type_two = '17', affiliation.jjsl, 0 ) ) / 1000 AS qtcpyzl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>) AS affiliation
+        LEFT JOIN basis_stock_house stockHouse ON stockHouse.id = affiliation.stock_house_id
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        <where>
+            affiliation.jjsl > 0
+            and dict.sort_type_three = 1
+            <if test="param.regionIdList != null and param.regionIdList.size > 0">
+                and (
+                affiliation.province_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.city_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.area_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                )
+            </if>
+            <if test="param.provinceId != null and param.provinceId != ''">
+                and affiliation.province_id =  #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != ''">
+                and affiliation.city_id =  #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != ''">
+                and affiliation.area_id =  #{param.areaId}
+            </if>
+            <if test="param.lqxzqhdm != null and param.lqxzqhdm != ''">
+                and affiliation.lqxzqhdm =  #{param.lqxzqhdm}
+            </if>
+            <if test="param.stockProvinceList != null and param.stockProvinceList.size > 0">
+                and stockHouse.province_id  in
+                <foreach collection="param.stockProvinceList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+            </if>
+            <if test="param.stockCityList != null and param.stockCityList.size > 0">
+                and stockHouse.city_id  in
+                <foreach collection="param.stockCityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.stockAreasList != null and param.stockAreasList.size > 0">
+                and stockHouse.area_id  in
+                <foreach collection="param.stockAreasList" item="area" open="(" separator="," close=")">
+                    #{area}
+                </foreach>
+            </if>
+            <if test="param.provinceList != null and param.provinceList.size > 0">
+                and affiliation.province_id  in
+                <foreach collection="param.provinceList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+            </if>
+            <if test="param.cityList != null and param.cityList.size > 0">
+                and affiliation.city_id  in
+                <foreach collection="param.cityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.areaList != null and param.areaList.size > 0">
+                and affiliation.area_id  in
+                <foreach collection="param.areaList" item="area" open="(" separator="," close=")">
+                    #{area}
+                </foreach>
+            </if>
+            <if test="param.stockHouseIdList != null and param.stockHouseIdList.size > 0">
+                and affiliation.stock_house_id in
+                <foreach collection="param.stockHouseIdList" item="stockHouseId" open="(" separator="," close=")">
+                    #{stockHouseId}
+                </foreach>
+            </if>
+            <if test="param.ylpzList != null and param.ylpzList.size > 0">
+                and dict.sort_type_two in
+                <foreach collection="param.ylpzList" item="ylpz" open="(" separator="," close=")">
+                    #{ylpz}
+                </foreach>
+            </if>
+            <if test="param.enterpriseIdList != null and param.enterpriseIdList.size > 0">
+                and affiliation.enterprise_id in
+                <foreach collection="param.enterpriseIdList" item="enterpriseId" open="(" separator="," close=")">
+                    #{enterpriseId}
+                </foreach>
+            </if>
+            <if test="param.idList != null and param.idList.size > 0">
+                and affiliation.id in
+                <foreach collection="param.idList" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="param.lsxzdmList != null and param.lsxzdmList.size > 0">
+                and affiliation.lsxzdm  in
+                <foreach collection="param.lsxzdmList" item="lsxzdm" open="(" separator="," close=")">
+                    #{lsxzdm}
+                </foreach>
+            </if>
+            <if test="param.lsxzdm != null and param.lsxzdm != ''">
+                and affiliation.lsxzdm  = #{param.lsxzdm}
+            </if>
+        </where>
+        <if test="param.reserveTitle != null and param.reserveTitle == 0" >
+            GROUP BY
+            affiliation.lsxzdm,
+            affiliation.enterprise_id,
+            affiliation.stock_house_id
+        </if>
+        ORDER BY
+        affiliation.stock_house_id,
+        dict.variety_key
+    </select>
+
+    <select id="physicalTotal" resultType="com.sydata.dashboard.vo.PhysicalInventoryNewVo"
+            parameterType="com.sydata.dashboard.param.PhysicalInventoryQueryParam">
+        SELECT
+        sum( affiliation.jjsl ) / 1000 AS zj,
+        sum( affiliation.sjsl ) / 1000 AS sjslzj,
+        sum( IF ( dict.sort_type_one = '1', affiliation.jjsl, 0 ) ) / 1000 + sum( IF ( dict.sort_type_one = '3', affiliation.jjsl, 0 ) ) / 1000 / 0.7 as zhyl,
+        sum( IF ( dict.sort_type_one = '1', affiliation.jjsl, 0 ) ) / 1000 AS ylzj,
+        sum( IF ( dict.sort_type_one = '2', affiliation.jjsl, 0 ) ) / 1000 AS yyzl,
+        sum( IF ( dict.sort_type_one = '3', affiliation.jjsl, 0 ) ) / 1000 AS cplzl,
+        sum( IF ( dict.sort_type_one = '4', affiliation.jjsl, 0 ) ) / 1000 AS cpyzl,
+        sum( IF ( dict.sort_type_one = '5', affiliation.jjsl, 0 ) ) / 1000 AS qtlzl,
+        sum( IF ( dict.sort_type_two = '1', affiliation.jjsl, 0 ) ) / 1000 AS grainxml,
+        sum( IF ( dict.sort_type_two = '2', affiliation.jjsl, 0 ) ) / 1000 AS graindgl,
+        sum( IF ( dict.sort_type_two = '3', affiliation.jjsl, 0 ) ) / 1000 AS grainyml,
+        sum( IF ( dict.sort_type_two = '4', affiliation.jjsl, 0 ) ) / 1000 AS grainddl,
+        sum( IF ( dict.sort_type_two = '5', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyl,
+        sum( IF ( dict.sort_type_two = '6', affiliation.jjsl, 0 ) ) / 1000 AS grainddyy,
+        sum( IF ( dict.sort_type_two = '7', affiliation.jjsl, 0 ) ) / 1000 AS grainhsyy,
+        sum( IF ( dict.sort_type_two = '8', affiliation.jjsl, 0 ) ) / 1000 AS grainczyy,
+        sum( IF ( dict.sort_type_two = '9', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyy,
+        sum( IF ( dict.sort_type_two = '10', affiliation.jjsl, 0 ) ) / 1000 AS grainmfl,
+        sum( IF ( dict.sort_type_two = '11', affiliation.jjsl, 0 ) ) / 1000 AS grainymml ,
+        sum( IF ( dict.sort_type_two = '12', affiliation.jjsl, 0 ) ) / 1000 AS graindml ,
+        sum( IF ( dict.sort_type_two = '13', affiliation.jjsl, 0 ) ) / 1000 AS qtcpl ,
+        sum( IF ( dict.sort_type_two = '14', affiliation.jjsl, 0 ) ) / 1000 AS grainddy ,
+        sum( IF ( dict.sort_type_two = '15', affiliation.jjsl, 0 ) ) / 1000 AS grainhsy ,
+        sum( IF ( dict.sort_type_two = '16', affiliation.jjsl, 0 ) ) / 1000 AS grainczy ,
+        sum( IF ( dict.sort_type_two = '17', affiliation.jjsl, 0 ) ) / 1000 AS qtcpyzl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>) as  affiliation
+        LEFT JOIN basis_stock_house stockHouse ON stockHouse.id = affiliation.stock_house_id
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        <where>
+            affiliation.jjsl > 0
+            and dict.sort_type_three = 1
+            <if test="param.regionIdList != null and param.regionIdList.size > 0">
+                and (
+                affiliation.province_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.city_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.area_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                )
+            </if>
+            <if test="param.provinceId != null and param.provinceId != ''">
+                and affiliation.province_id =  #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != ''">
+                and affiliation.city_id =  #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != ''">
+                and affiliation.area_id =  #{param.areaId}
+            </if>
+            <if test="param.cityList != null and param.cityList.size > 0">
+                and affiliation.city_id  in
+                <foreach collection="param.cityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.cityList != null and param.cityList.size > 0">
+                and affiliation.city_id  in
+                <foreach collection="param.cityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.areaList != null and param.areaList.size > 0">
+                and affiliation.area_id  in
+                <foreach collection="param.areaList" item="area" open="(" separator="," close=")">
+                    #{area}
+                </foreach>
+            </if>
+            <if test="param.stockHouseIdList != null and param.stockHouseIdList.size > 0">
+                and affiliation.stock_house_id in
+                <foreach collection="param.stockHouseIdList" item="stockHouseId" open="(" separator="," close=")">
+                    #{stockHouseId}
+                </foreach>
+            </if>
+            <if test="param.ylpzList != null and param.ylpzList.size > 0">
+                and dict.sort_type_two in
+                <foreach collection="param.ylpzList" item="ylpz" open="(" separator="," close=")">
+                    #{ylpz}
+                </foreach>
+            </if>
+            <if test="param.enterpriseIdList != null and param.enterpriseIdList.size > 0">
+                and affiliation.enterprise_id in
+                <foreach collection="param.enterpriseIdList" item="enterpriseId" open="(" separator="," close=")">
+                    #{enterpriseId}
+                </foreach>
+            </if>
+            <if test="param.lsxzdmList != null and param.lsxzdmList.size > 0">
+                and affiliation.lsxzdm in
+                <foreach collection="param.lsxzdmList" item="lsxzdm" open="(" separator="," close=")">
+                    #{lsxzdm}
+                </foreach>
+            </if>
+            <if test="param.lsxzdm != null and param.lsxzdm != ''">
+                and affiliation.lsxzdm  = #{param.lsxzdm}
+            </if>
+            <if test="param.lqxzqhdm != null and param.lqxzqhdm != ''">
+                and affiliation.lqxzqhdm =  #{param.lqxzqhdm}
+            </if>
+            <if test="param.idList != null and param.idList.size > 0">
+                and affiliation.id in
+                <foreach collection="param.idList" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="physicalOilTotalPage" resultType="com.sydata.dashboard.vo.PhysicalInventoryOilNewVo">
+        SELECT
+        dict.variety_key AS lspz,
+        dict.variety_value AS lspzmc,
+        affiliation.id,
+        affiliation.province_id AS province,
+        affiliation.city_id AS city,
+        affiliation.area_id AS area,
+        affiliation.lsxzdm AS lsxzdm,
+        affiliation.lqxzqhdm AS lqxzqhdm,
+        affiliation.stock_house_id AS stockHouseId,
+        affiliation.enterprise_id AS enterpriseId,
+        sum( affiliation.jjsl ) / 1000 AS zj,
+        sum( affiliation.sjsl ) / 1000 AS sjslzj,
+        sum( IF ( dict.sort_type_one = '2', affiliation.jjsl, 0 ) ) / 1000 + sum( IF ( dict.sort_type_one = '4', affiliation.jjsl, 0 ) ) / 1000 as zhyy,
+        sum( IF ( dict.sort_type_one = '1', affiliation.jjsl, 0 ) ) / 1000 AS ylzj,
+        sum( IF ( dict.sort_type_one = '2', affiliation.jjsl, 0 ) ) / 1000 AS yyzl,
+        sum( IF ( dict.sort_type_one = '3', affiliation.jjsl, 0 ) ) / 1000 AS cplzl,
+        sum( IF ( dict.sort_type_one = '4', affiliation.jjsl, 0 ) ) / 1000 AS cpyzl,
+        sum( IF ( dict.sort_type_one = '5', affiliation.jjsl, 0 ) ) / 1000 AS qtlzl,
+        sum( IF ( dict.sort_type_two = '1', affiliation.jjsl, 0 ) ) / 1000 AS grainxml,
+        sum( IF ( dict.sort_type_two = '2', affiliation.jjsl, 0 ) ) / 1000 AS graindgl,
+        sum( IF ( dict.sort_type_two = '3', affiliation.jjsl, 0 ) ) / 1000 AS grainyml,
+        sum( IF ( dict.sort_type_two = '4', affiliation.jjsl, 0 ) ) / 1000 AS grainddl,
+        sum( IF ( dict.sort_type_two = '5', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyl,
+        sum( IF ( dict.sort_type_two = '6', affiliation.jjsl, 0 ) ) / 1000 AS grainddyy,
+        sum( IF ( dict.sort_type_two = '7', affiliation.jjsl, 0 ) ) / 1000 AS grainhsyy,
+        sum( IF ( dict.sort_type_two = '8', affiliation.jjsl, 0 ) ) / 1000 AS grainczyy,
+        sum( IF ( dict.sort_type_two = '9', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyy,
+        sum( IF ( dict.sort_type_two = '10', affiliation.jjsl, 0 ) ) / 1000 AS grainmfl,
+        sum( IF ( dict.sort_type_two = '11', affiliation.jjsl, 0 ) ) / 1000 AS grainymml ,
+        sum( IF ( dict.sort_type_two = '12', affiliation.jjsl, 0 ) ) / 1000 AS graindml ,
+        sum( IF ( dict.sort_type_two = '13', affiliation.jjsl, 0 ) ) / 1000 AS qtcpl ,
+        sum( IF ( dict.sort_type_two = '14', affiliation.jjsl, 0 ) ) / 1000 AS grainddy ,
+        sum( IF ( dict.sort_type_two = '15', affiliation.jjsl, 0 ) ) / 1000 AS grainhsy ,
+        sum( IF ( dict.sort_type_two = '16', affiliation.jjsl, 0 ) ) / 1000 AS grainczy ,
+        sum( IF ( dict.sort_type_two = '17', affiliation.jjsl, 0 ) ) / 1000 AS qtcpyzl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/> ) AS affiliation
+        LEFT JOIN basis_stock_house stockHouse ON stockHouse.id = affiliation.stock_house_id
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        <where>
+            affiliation.jjsl > 0
+            and dict.sort_type_three = 2
+            <if test="param.regionIdList != null and param.regionIdList.size > 0">
+                and (
+                affiliation.province_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.city_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.area_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                )
+            </if>
+            <if test="param.provinceId != null and param.provinceId != ''">
+                and affiliation.province_id =  #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != ''">
+                and affiliation.city_id =  #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != ''">
+                and affiliation.area_id =  #{param.areaId}
+            </if>
+            <if test="param.lqxzqhdm != null and param.lqxzqhdm != ''">
+                and affiliation.lqxzqhdm =  #{param.lqxzqhdm}
+            </if>
+            <if test="param.stockProvinceList != null and param.stockProvinceList.size > 0">
+                and stockHouse.province_id  in
+                <foreach collection="param.stockProvinceList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+            </if>
+            <if test="param.stockCityList != null and param.stockCityList.size > 0">
+                and stockHouse.city_id  in
+                <foreach collection="param.stockCityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.stockAreasList != null and param.stockAreasList.size > 0">
+                and stockHouse.area_id  in
+                <foreach collection="param.stockAreasList" item="area" open="(" separator="," close=")">
+                    #{area}
+                </foreach>
+            </if>
+            <if test="param.provinceList != null and param.provinceList.size > 0">
+                and affiliation.province_id  in
+                <foreach collection="param.provinceList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+            </if>
+            <if test="param.cityList != null and param.cityList.size > 0">
+                and affiliation.city_id  in
+                <foreach collection="param.cityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.areaList != null and param.areaList.size > 0">
+                and affiliation.area_id  in
+                <foreach collection="param.areaList" item="area" open="(" separator="," close=")">
+                    #{area}
+                </foreach>
+            </if>
+            <if test="param.stockHouseIdList != null and param.stockHouseIdList.size > 0">
+                and affiliation.stock_house_id in
+                <foreach collection="param.stockHouseIdList" item="stockHouseId" open="(" separator="," close=")">
+                    #{stockHouseId}
+                </foreach>
+            </if>
+            <if test="param.ylpzList != null and param.ylpzList.size > 0">
+                and dict.sort_type_two in
+                <foreach collection="param.ylpzList" item="ylpz" open="(" separator="," close=")">
+                    #{ylpz}
+                </foreach>
+            </if>
+            <if test="param.enterpriseIdList != null and param.enterpriseIdList.size > 0">
+                and affiliation.enterprise_id in
+                <foreach collection="param.enterpriseIdList" item="enterpriseId" open="(" separator="," close=")">
+                    #{enterpriseId}
+                </foreach>
+            </if>
+            <if test="param.idList != null and param.idList.size > 0">
+                and affiliation.id in
+                <foreach collection="param.idList" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="param.lsxzdmList != null and param.lsxzdmList.size > 0">
+                and affiliation.lsxzdm  in
+                <foreach collection="param.lsxzdmList" item="lsxzdm" open="(" separator="," close=")">
+                    #{lsxzdm}
+                </foreach>
+            </if>
+            <if test="param.lsxzdm != null and param.lsxzdm != ''">
+                and affiliation.lsxzdm  = #{param.lsxzdm}
+            </if>
+        </where>
+        <if test="param.reserveTitle != null and param.reserveTitle == 0" >
+            GROUP BY
+            affiliation.lsxzdm,
+            affiliation.enterprise_id,
+            affiliation.stock_house_id
+        </if>
+        ORDER BY
+        dict.variety_key,
+        affiliation.stock_house_id
+    </select>
+
+    <select id="physicalOilTotal" resultType="com.sydata.dashboard.vo.PhysicalInventoryOilNewVo">
+        SELECT
+        sum( affiliation.jjsl ) / 1000 AS zj,
+        sum( affiliation.sjsl ) / 1000 AS sjslzj,
+        sum( IF ( dict.sort_type_one = '2', affiliation.jjsl, 0 ) ) / 1000 + sum( IF ( dict.sort_type_one = '4', affiliation.jjsl, 0 ) ) / 1000 as zhyy,
+        sum( IF ( dict.sort_type_one = '1', affiliation.jjsl, 0 ) ) / 1000 AS ylzj,
+        sum( IF ( dict.sort_type_one = '2', affiliation.jjsl, 0 ) ) / 1000 AS yyzl,
+        sum( IF ( dict.sort_type_one = '3', affiliation.jjsl, 0 ) ) / 1000 AS cplzl,
+        sum( IF ( dict.sort_type_one = '4', affiliation.jjsl, 0 ) ) / 1000 AS cpyzl,
+        sum( IF ( dict.sort_type_one = '5', affiliation.jjsl, 0 ) ) / 1000 AS qtlzl,
+        sum( IF ( dict.sort_type_two = '1', affiliation.jjsl, 0 ) ) / 1000 AS grainxml,
+        sum( IF ( dict.sort_type_two = '2', affiliation.jjsl, 0 ) ) / 1000 AS graindgl,
+        sum( IF ( dict.sort_type_two = '3', affiliation.jjsl, 0 ) ) / 1000 AS grainyml,
+        sum( IF ( dict.sort_type_two = '4', affiliation.jjsl, 0 ) ) / 1000 AS grainddl,
+        sum( IF ( dict.sort_type_two = '5', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyl,
+        sum( IF ( dict.sort_type_two = '6', affiliation.jjsl, 0 ) ) / 1000 AS grainddyy,
+        sum( IF ( dict.sort_type_two = '7', affiliation.jjsl, 0 ) ) / 1000 AS grainhsyy,
+        sum( IF ( dict.sort_type_two = '8', affiliation.jjsl, 0 ) ) / 1000 AS grainczyy,
+        sum( IF ( dict.sort_type_two = '9', affiliation.jjsl, 0 ) ) / 1000 AS grainqtyy,
+        sum( IF ( dict.sort_type_two = '10', affiliation.jjsl, 0 ) ) / 1000 AS grainmfl,
+        sum( IF ( dict.sort_type_two = '11', affiliation.jjsl, 0 ) ) / 1000 AS grainymml ,
+        sum( IF ( dict.sort_type_two = '12', affiliation.jjsl, 0 ) ) / 1000 AS graindml ,
+        sum( IF ( dict.sort_type_two = '13', affiliation.jjsl, 0 ) ) / 1000 AS qtcpl ,
+        sum( IF ( dict.sort_type_two = '14', affiliation.jjsl, 0 ) ) / 1000 AS grainddy ,
+        sum( IF ( dict.sort_type_two = '15', affiliation.jjsl, 0 ) ) / 1000 AS grainhsy ,
+        sum( IF ( dict.sort_type_two = '16', affiliation.jjsl, 0 ) ) / 1000 AS grainczy ,
+        sum( IF ( dict.sort_type_two = '17', affiliation.jjsl, 0 ) ) / 1000 AS qtcpyzl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>) as  affiliation
+        LEFT JOIN basis_stock_house stockHouse ON stockHouse.id = affiliation.stock_house_id
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        <where>
+            affiliation.jjsl > 0
+            and dict.sort_type_three = 2
+            <if test="param.regionIdList != null and param.regionIdList.size > 0">
+                and (
+                affiliation.province_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.city_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                or affiliation.area_id  in
+                <foreach collection="param.regionIdList" item="provinceId" open="(" separator="," close=")">
+                    #{provinceId}
+                </foreach>
+                )
+            </if>
+            <if test="param.provinceId != null and param.provinceId != ''">
+                and affiliation.province_id =  #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != ''">
+                and affiliation.city_id =  #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != ''">
+                and affiliation.area_id =  #{param.areaId}
+            </if>
+            <if test="param.cityList != null and param.cityList.size > 0">
+                and affiliation.city_id  in
+                <foreach collection="param.cityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.cityList != null and param.cityList.size > 0">
+                and affiliation.city_id  in
+                <foreach collection="param.cityList" item="cityId" open="(" separator="," close=")">
+                    #{cityId}
+                </foreach>
+            </if>
+            <if test="param.areaList != null and param.areaList.size > 0">
+                and affiliation.area_id  in
+                <foreach collection="param.areaList" item="area" open="(" separator="," close=")">
+                    #{area}
+                </foreach>
+            </if>
+            <if test="param.stockHouseIdList != null and param.stockHouseIdList.size > 0">
+                and affiliation.stock_house_id in
+                <foreach collection="param.stockHouseIdList" item="stockHouseId" open="(" separator="," close=")">
+                    #{stockHouseId}
+                </foreach>
+            </if>
+            <if test="param.ylpzList != null and param.ylpzList.size > 0">
+                and dict.sort_type_two in
+                <foreach collection="param.ylpzList" item="ylpz" open="(" separator="," close=")">
+                    #{ylpz}
+                </foreach>
+            </if>
+            <if test="param.enterpriseIdList != null and param.enterpriseIdList.size > 0">
+                and affiliation.enterprise_id in
+                <foreach collection="param.enterpriseIdList" item="enterpriseId" open="(" separator="," close=")">
+                    #{enterpriseId}
+                </foreach>
+            </if>
+            <if test="param.lsxzdmList != null and param.lsxzdmList.size > 0">
+                and affiliation.lsxzdm  in
+                <foreach collection="param.lsxzdmList" item="lsxzdm" open="(" separator="," close=")">
+                    #{lsxzdm}
+                </foreach>
+            </if>
+            <if test="param.lsxzdm != null and param.lsxzdm != ''">
+                and affiliation.lsxzdm  = #{param.lsxzdm}
+            </if>
+            <if test="param.lqxzqhdm != null and param.lqxzqhdm != ''">
+                and affiliation.lqxzqhdm =  #{param.lqxzqhdm}
+            </if>
+            <if test="param.idList != null and param.idList.size > 0">
+                and affiliation.id in
+                <foreach collection="param.idList" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="varietyOilStocks" resultType="com.sydata.dashboard.vo.VarietyStockVo">
+        SELECT
+        dict.sort_type_two as lspzfl,
+        sum(affiliation.jjsl) /1000 / 10000 as jjsl
+        FROM (<include refid="selectRealTimeReserveStockAffiliation"/>) AS affiliation
+        INNER JOIN food_variety_sort dict ON dict.variety_key = affiliation.lspzdm
+        where dict.sort_type_three = '2'
+        and affiliation.lsxzdm in ('123', '122','121' ,'129' , '120' , '331', '100' , '110' , '321' , '350' , '360')
+        <if test="param.provinceId != null and param.provinceId != ''">
+            and affiliation.province_id =  #{param.provinceId}
+        </if>
+        <if test="param.cityId != null and param.cityId != ''">
+            and affiliation.city_id =  #{param.cityId}
+        </if>
+        <if test="param.areaId != null and param.areaId != ''">
+            and affiliation.area_id =  #{param.areaId}
+        </if>
+            GROUP BY dict.sort_type_two
+            ORDER BY sum(affiliation.jjsl) desc
+    </select>
+
+    <select id="reserveGrainOilEquivalent" resultType="com.sydata.dashboard.vo.ReserveGrainOilEquivalentVo">
+        select
+        r.id,
+        r.name,
+        r.type,
+        sum(if(dict.sort_type_three = 1 and dict.sort_type_one in ('1','3'),if(dict.sort_type_one = '1',affiliation.jjsl,affiliation.jjsl / 0.7),0)) / 1000 zhyl,
+        sum(if(dict.sort_type_three = 2 and dict.sort_type_one in ('2','4'),affiliation.jjsl,0)) / 1000 zhyy
+        from org_region r
+        left join trade_stock_grain_newest affiliation on affiliation.lqxzqhdm = r.id
+        left join food_variety_sort dict on dict.variety_key = affiliation.lspzdm
+        <where>
+            r.country_id = '000156' and r.province_id = '440000'
+            <if test="param.countryId != null and param.countryId != ''">
+                and r.country_id = #{param.countryId}
+            </if>
+            <if test="param.provinceId != null and param.provinceId != ''">
+                and r.province_id = #{param.provinceId}
+            </if>
+            <if test="param.cityId != null and param.cityId != ''">
+                and r.city_id =  #{param.cityId}
+            </if>
+            <if test="param.areaId != null and param.areaId != ''">
+                and r.area_id =  #{param.areaId}
+            </if>
+        </where>
+        group by r.${param.groupBy}
+        order by r.region_sort
+    </select>
+</mapper>

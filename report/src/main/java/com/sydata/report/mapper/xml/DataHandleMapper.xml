@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.report.mapper.DataHandleMapper">
+
+    <select id="notHandleIdsByEndTime" resultType="java.lang.String">
+        select max(id) from report_data_handle
+        where api_code = #{apiCode} and create_time &lt; #{endTime} and handle_state = false
+        group by data_id
+    </select>
+</mapper>

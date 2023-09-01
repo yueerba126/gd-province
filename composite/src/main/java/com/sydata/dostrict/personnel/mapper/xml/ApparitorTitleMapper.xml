@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.personnel.mapper.ApparitorTitleMapper">
+
+    <resultMap type="com.sydata.dostrict.personnel.domain.ApparitorTitle" id="ApparitorTitleResult">
+        <result property="id"    column="id"    />
+        <result property="deptId"    column="dept_id"    />
+        <result property="titleTypeId"    column="title_type_id"    />
+        <result property="dwdm"    column="dwdm"    />
+        <result property="dwmc"    column="dwmc"    />
+        <result property="personnelId"    column="personnel_id"    />
+        <result property="czbz"    column="czbz"    />
+    </resultMap>
+
+    <sql id="selectApparitorTitleVo">
+        select id, create_by, create_time, update_by, update_time, tenant_id, enterprise_id, region_id, country_id, province_id, city_id, area_id, stock_house_id, dept_id, title_type_id, bill_status, personnel_id from apparitor_title
+    </sql>
+
+
+</mapper>

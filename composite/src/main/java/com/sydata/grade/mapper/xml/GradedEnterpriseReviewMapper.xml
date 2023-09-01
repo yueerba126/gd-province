@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.grade.mapper.GradedEnterpriseReviewMapper">
+    <sql id="commonWhere">
+         and a.czbz != 'd'
+        <if test=" null != param.id and '' != param.id">
+            and a.id = #{param.id}
+        </if>
+        <if test=" null != param.sbnf and '' != param.sbnf">
+            and a.sbnf = #{param.sbnf}
+        </if>
+        <if test=" null != param.kdmc and '' != param.kdmc">
+            and a.kdmc like concat('%',#{param.kdmc},'%')
+        </if>
+        <if test=" null != param.qymc and '' != param.qymc">
+            and a.qymc like concat('%',#{param.qymc},'%')
+        </if>
+        <if test=" null != param.sbzt and '' != param.sbzt">
+            and a.sbzt = #{param.sbzt}
+        </if>
+        <if test=" null != param.beginSbrq and '' != param.beginSbrq">
+            and a.sbrq >= #{param.beginSbrq}
+        </if>
+        <if test=" null != param.endSbrq and '' != param.endSbrq">
+            <![CDATA[and a.sbrq <= #{param.endSbrq}]]>
+        </if>
+        <if test=" null != param.spnf and '' != param.spnf">
+            and a.spnf = #{param.spnf}
+        </if>
+        <if test=" null != param.spzt and '' != param.spzt">
+            and a.spzt = #{param.spzt}
+        </if>
+        <if test=" null != param.sbdj and '' != param.sbdj">
+            and a.sbdj = #{param.sbdj}
+        </if>
+    </sql>
+    <select id="getGradedEnterpriseReviewList"
+            parameterType="com.sydata.grade.param.GradedEnterpriseReviewPageParam"
+            resultType="com.sydata.grade.vo.GradedEnterpriseReviewVo">
+        select a.* from (
+        select
+        a.id
+        ,a.qymc
+        ,a.kqmc
+        ,a.qydm
+        ,a.kqdm
+        ,a.sbnf
+        ,a.sbrq
+        ,a.xzqhdm
+        ,a.sbdj
+        ,a.spdj
+        ,a.spnf
+        ,a.spzt
+        ,a.lkcr
+        ,a.zpf
+        ,a.sbzt
+        ,a.city_sdpf citySdpf
+        ,a.city_sdzt citySdzt
+        ,a.province_sdpf provinceSdpf
+        ,a.province_sdzt provinceSdzt
+        ,a.qydj
+        ,a.czbz
+        ,a.create_by createBy
+        ,a.create_time createTime
+        ,a.update_by updateBy
+        ,a.update_time updateTime
+        ,a.region_id regionId
+        ,a.country_id countryId
+        ,a.province_id provinceId
+        ,a.city_id cityId
+        ,a.area_id areaId
+        ,a.enterprise_id enterpriseId
+        ,a.stock_house_id stockHouseId
+        ,group_concat(b.flow_code order by flow_sort) flowCode,
+        group_concat(b.flow_status order by flow_sort) flowStatus,
+        group_concat(b.xzqhdm order by flow_sort) flowXzqhdm
+        from graded_enterprise_review a
+        left join (select qyid,flow_code,xzqhdm,flow_status,flow_sort from graded_enterprise_flow) b on a.id = b.qyid
+        <where>
+            <include refid="commonWhere"></include>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '1' ">
+                <![CDATA[and a.sbdj <= 5 and a.sbdj >=3]]>
+            </if>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '2' ">
+                <![CDATA[and a.sbdj < 3 ]]>
+            </if>
+        </where>
+        group by a.id
+        ) a where find_in_set(#{param.xzqhdm},a.flowXzqhdm)
+    </select>
+
+    <select id="getGradedEnterpriseReviewListByIds"
+            parameterType="com.sydata.grade.param.GradedEnterpriseReviewPageParam"
+            resultType="com.sydata.grade.vo.GradedEnterpriseReviewVo">
+        select a.* from (
+        select
+        a.id
+        ,a.qymc
+        ,a.kqmc
+        ,a.qydm
+        ,a.kqdm
+        ,a.sbnf
+        ,a.sbrq
+        ,a.xzqhdm
+        ,a.sbdj
+        ,a.spdj
+        ,a.spnf
+        ,a.spzt
+        ,a.lkcr
+        ,a.zpf
+        ,a.sbzt
+        ,a.city_sdpf citySdpf
+        ,a.city_sdzt citySdzt
+        ,a.province_sdpf provinceSdpf
+        ,a.province_sdzt provinceSdzt
+        ,a.qydj
+        ,a.czbz
+        ,a.create_by createBy
+        ,a.create_time createTime
+        ,a.update_by updateBy
+        ,a.update_time updateTime
+        ,a.region_id regionId
+        ,a.country_id countryId
+        ,a.province_id provinceId
+        ,a.city_id cityId
+        ,a.area_id areaId
+        ,a.enterprise_id enterpriseId
+        ,a.stock_house_id stockHouseId
+        ,group_concat(b.flow_code order by flow_sort) flowCode,
+        group_concat(b.flow_status order by flow_sort) flowStatus,
+        group_concat(b.xzqhdm order by flow_sort) flowXzqhdm
+        from graded_enterprise_review a
+        left join (select qyid,flow_code,xzqhdm,flow_status,flow_sort from graded_enterprise_flow) b on a.id = b.qyid
+        <where>
+            <include refid="commonWhere"></include>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '1' ">
+                <![CDATA[and a.sbdj <= 5 and a.sbdj >=3]]>
+            </if>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '2' ">
+                <![CDATA[and a.sbdj < 3 ]]>
+            </if>
+            <if test="param.ids!=null and param.ids.size()!=0">
+                and a.id in
+                <foreach collection="param.ids" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by a.id
+        ) a where find_in_set(#{param.xzqhdm},a.flowXzqhdm)
+    </select>
+
+    <select id="getSdGradedEnterpriseReviewList"
+            parameterType="com.sydata.grade.param.GradedEnterpriseReviewPageParam"
+            resultType="com.sydata.grade.vo.GradedEnterpriseReviewVo">
+        select a.* from (
+        select
+        a.id
+        ,a.qymc
+        ,a.kqmc
+        ,a.qydm
+        ,a.kqdm
+        ,a.sbnf
+        ,a.sbrq
+        ,a.xzqhdm
+        ,a.sbdj
+        ,a.spdj
+        ,a.spnf
+        ,a.spzt
+        ,a.lkcr
+        ,a.zpf
+        ,a.sbzt
+        ,a.city_sdpf citySdpf
+        ,a.city_sdzt citySdzt
+        ,a.province_sdpf provinceSdpf
+        ,a.province_sdzt provinceSdzt
+        ,a.qydj
+        ,a.czbz
+        ,a.create_by createBy
+        ,a.create_time createTime
+        ,a.update_by updateBy
+        ,a.update_time updateTime
+        ,a.region_id regionId
+        ,a.country_id countryId
+        ,a.province_id provinceId
+        ,a.city_id cityId
+        ,a.area_id areaId
+        ,a.enterprise_id enterpriseId
+        ,a.stock_house_id stockHouseId
+        ,group_concat(b.flow_code order by flow_sort) flowCode,
+        group_concat(b.flow_status order by flow_sort) flowStatus,
+        group_concat(b.xzqhdm order by flow_sort) flowXzqhdm
+        from graded_enterprise_review a
+        left join (select qyid,flow_code,xzqhdm,flow_status,flow_sort from graded_enterprise_flow) b on a.id = b.qyid
+        <where>
+            <include refid="commonWhere"></include>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '1' ">
+                <![CDATA[and a.sbdj <= 5 and a.sbdj >=3]]>
+            </if>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '2' ">
+                <![CDATA[and a.sbdj < 3 ]]>
+            </if>
+            and (a.city_sdzt in ('1','2') or a.province_sdzt in ('1','2'))
+        </where>
+        group by a.id
+        ) a where find_in_set(#{param.xzqhdm},a.flowXzqhdm)
+    </select>
+
+    <select id="getSdGradedEnterpriseReviewListByIds"
+            parameterType="com.sydata.grade.param.GradedEnterpriseReviewPageParam"
+            resultType="com.sydata.grade.vo.GradedEnterpriseReviewVo">
+        select a.* from (
+        select
+        a.id
+        ,a.qymc
+        ,a.kqmc
+        ,a.qydm
+        ,a.kqdm
+        ,a.sbnf
+        ,a.sbrq
+        ,a.xzqhdm
+        ,a.sbdj
+        ,a.spdj
+        ,a.spnf
+        ,a.spzt
+        ,a.lkcr
+        ,a.zpf
+        ,a.sbzt
+        ,a.city_sdpf citySdpf
+        ,a.city_sdzt citySdzt
+        ,a.province_sdpf provinceSdpf
+        ,a.province_sdzt provinceSdzt
+        ,a.qydj
+        ,a.czbz
+        ,a.create_by createBy
+        ,a.create_time createTime
+        ,a.update_by updateBy
+        ,a.update_time updateTime
+        ,a.region_id regionId
+        ,a.country_id countryId
+        ,a.province_id provinceId
+        ,a.city_id cityId
+        ,a.area_id areaId
+        ,a.enterprise_id enterpriseId
+        ,a.stock_house_id stockHouseId
+        ,group_concat(b.flow_code order by flow_sort) flowCode,
+        group_concat(b.flow_status order by flow_sort) flowStatus,
+        group_concat(b.xzqhdm order by flow_sort) flowXzqhdm
+        from graded_enterprise_review a
+        left join (select qyid,flow_code,xzqhdm,flow_status,flow_sort from graded_enterprise_flow) b on a.id = b.qyid
+        <where>
+            <include refid="commonWhere"></include>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '1' ">
+                <![CDATA[and a.sbdj <= 5 and a.sbdj >=3]]>
+            </if>
+            <if test=" null != param.checkSbdj and param.checkSbdj == '2' ">
+                <![CDATA[and a.sbdj < 3 ]]>
+            </if>
+            <if test="param.ids!=null and param.ids.size()!=0">
+                and a.id in
+                <foreach collection="param.ids" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            and (a.city_sdzt in ('1','2') or a.province_sdzt in ('1','2'))
+        </where>
+        group by a.id
+        ) a where find_in_set(#{param.xzqhdm},a.flowXzqhdm)
+    </select>
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.dostrict.storage.mapper.ApparitorSecureTypeMapper">
+    <select id="selectFileTypeTreeList" resultType="com.sydata.common.domain.KuNode"
+            parameterType="com.sydata.dostrict.storage.param.ApparitorSecureTypeSelectParam">
+        SELECT
+        id `key`,
+        type_name title,
+        type_code type,
+        parent_id parentKey,
+        IF(is_enable = '01','02','01') disabled
+        FROM apparitor_secure_type mt
+        WHERE mt.czbz != 'd'
+        ORDER BY create_time DESC
+    </select>
+</mapper>

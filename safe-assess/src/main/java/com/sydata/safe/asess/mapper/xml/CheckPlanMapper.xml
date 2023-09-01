@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.safe.asess.mapper.CheckPlanMapper">
+
+
+    <update id="checkSubmit">
+        update safe_assess_check_plan set
+        region_checked_count = region_checked_count + #{count},
+        plan_state = if(region_count = region_checked_count, '已抽查', '抽查中')
+        where region_count >= region_checked_count + #{count} and region_checked_count + #{count} >= 0
+    </update>
+</mapper>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.monitoring.mapper.MonitoringStatisticsStorageFacilitiesMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.sydata.monitoring.entity.MonitoringStatisticsStorageFacilities">
+        <result column="id" property="id" />
+        <result column="statistic_id" property="statisticId" />
+        <result column="has_assays_room" property="hasAssaysRoom" />
+        <result column="has_assays_rule_check_ability" property="hasAssaysRuleCheckAbility" />
+        <result column="has_grain_oil_quality_check_ability" property="hasGrainOilQualityCheckAbility" />
+        <result column="has_danger_source" property="hasDangerSource" />
+        <result column="has_pollute_source" property="hasPolluteSource" />
+        <result column="has_ground_quality_check_ability" property="hasGroundQualityCheckAbility" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+        <result column="region_id" property="regionId" />
+        <result column="country_id" property="countryId" />
+        <result column="province_id" property="provinceId" />
+        <result column="city_id" property="cityId" />
+        <result column="area_id" property="areaId" />
+        <result column="enterprise_id" property="enterpriseId" />
+        <result column="stock_house_id" property="stockHouseId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id,
+        statistic_id, has_assays_room, has_assays_rule_check_ability, has_grain_oil_quality_check_ability, has_danger_source, has_pollute_source, has_ground_quality_check_ability, create_by, create_time, update_by, update_time, region_id, country_id, province_id, city_id, area_id, enterprise_id, stock_house_id
+    </sql>
+
+
+    <sql id="base_from">
+        from monitoring_statistics_storage_facilities AS main
+    </sql>
+
+    <sql id="base_query_condition">
+        <if test="queryParam.entity != null">
+            <if test="queryParam.entity.statisticId != null">
+
+                AND main.statistic_id = #{queryParam.entity.statisticId}
+            </if>
+            <if test="queryParam.entity.hasAssaysRoom != null">
+
+                AND main.has_assays_room = #{queryParam.entity.hasAssaysRoom}
+            </if>
+            <if test="queryParam.entity.hasAssaysRuleCheckAbility != null">
+
+                AND main.has_assays_rule_check_ability = #{queryParam.entity.hasAssaysRuleCheckAbility}
+            </if>
+            <if test="queryParam.entity.hasGrainOilQualityCheckAbility != null">
+
+                AND main.has_grain_oil_quality_check_ability = #{queryParam.entity.hasGrainOilQualityCheckAbility}
+            </if>
+            <if test="queryParam.entity.hasDangerSource != null">
+
+                AND main.has_danger_source = #{queryParam.entity.hasDangerSource}
+            </if>
+            <if test="queryParam.entity.hasPolluteSource != null">
+
+                AND main.has_pollute_source = #{queryParam.entity.hasPolluteSource}
+            </if>
+            <if test="queryParam.entity.hasGroundQualityCheckAbility != null">
+
+                AND main.has_ground_quality_check_ability = #{queryParam.entity.hasGroundQualityCheckAbility}
+            </if>
+            <if test="queryParam.entity.createBy != null">
+
+                AND main.create_by = #{queryParam.entity.createBy}
+            </if>
+            <if test="queryParam.entity.createTime != null">
+
+                AND main.create_time = #{queryParam.entity.createTime}
+            </if>
+            <if test="queryParam.entity.updateBy != null">
+
+                AND main.update_by = #{queryParam.entity.updateBy}
+            </if>
+            <if test="queryParam.entity.updateTime != null">
+
+                AND main.update_time = #{queryParam.entity.updateTime}
+            </if>
+            <if test="queryParam.entity.regionId != null">
+
+                AND main.region_id = #{queryParam.entity.regionId}
+            </if>
+            <if test="queryParam.entity.countryId != null">
+
+                AND main.country_id = #{queryParam.entity.countryId}
+            </if>
+            <if test="queryParam.entity.provinceId != null">
+
+                AND main.province_id = #{queryParam.entity.provinceId}
+            </if>
+            <if test="queryParam.entity.cityId != null">
+
+                AND main.city_id = #{queryParam.entity.cityId}
+            </if>
+            <if test="queryParam.entity.areaId != null">
+
+                AND main.area_id = #{queryParam.entity.areaId}
+            </if>
+            <if test="queryParam.entity.enterpriseId != null">
+
+                AND main.enterprise_id = #{queryParam.entity.enterpriseId}
+            </if>
+            <if test="queryParam.entity.stockHouseId != null">
+
+                AND main.stock_house_id = #{queryParam.entity.stockHouseId}
+            </if>
+        </if>
+    </sql>
+
+    <select id="idPage" resultType="java.lang.Long">
+        select distinct main.id
+
+        <include refid="base_from" />
+
+        <where>
+            <if test="queryParam.tenantId != null">
+                main.tenant_id = #{queryParam.tenantId}
+            </if>
+
+            <include refid="base_query_condition"/>
+
+        </where>
+
+        order by main.create_time desc
+    </select>
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sydata.monitoring.mapper.MonitoringStatisticsIncomeExpensesMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.sydata.monitoring.entity.MonitoringStatisticsIncomeExpenses">
+        <result column="id" property="id" />
+        <result column="statistic_id" property="statisticId" />
+        <result column="in_total" property="inTotal" />
+        <result column="out_total" property="outTotal" />
+        <result column="month" property="month" />
+        <result column="other_in_total" property="otherInTotal" />
+        <result column="other_out_total" property="otherOutTotal" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+        <result column="region_id" property="regionId" />
+        <result column="country_id" property="countryId" />
+        <result column="province_id" property="provinceId" />
+        <result column="city_id" property="cityId" />
+        <result column="area_id" property="areaId" />
+        <result column="enterprise_id" property="enterpriseId" />
+        <result column="stock_house_id" property="stockHouseId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id,
+        statistic_id, in_total, out_total, month, other_in_total, other_out_total, create_by, create_time, update_by, update_time, region_id, country_id, province_id, city_id, area_id, enterprise_id, stock_house_id
+    </sql>
+
+
+    <sql id="base_from">
+        from monitoring_statistics_income_expenses AS main
+    </sql>
+
+    <sql id="base_query_condition">
+        <if test="queryParam.entity != null">
+            <if test="queryParam.entity.statisticId != null">
+
+                AND main.statistic_id = #{queryParam.entity.statisticId}
+            </if>
+            <if test="queryParam.entity.inTotal != null">
+
+                AND main.in_total = #{queryParam.entity.inTotal}
+            </if>
+            <if test="queryParam.entity.outTotal != null">
+
+                AND main.out_total = #{queryParam.entity.outTotal}
+            </if>
+            <if test="queryParam.entity.month != null">
+
+                AND main.month = #{queryParam.entity.month}
+            </if>
+            <if test="queryParam.entity.otherInTotal != null">
+
+                AND main.other_in_total = #{queryParam.entity.otherInTotal}
+            </if>
+            <if test="queryParam.entity.otherOutTotal != null">
+
+                AND main.other_out_total = #{queryParam.entity.otherOutTotal}
+            </if>
+            <if test="queryParam.entity.createBy != null">
+
+                AND main.create_by = #{queryParam.entity.createBy}
+            </if>
+            <if test="queryParam.entity.createTime != null">
+
+                AND main.create_time = #{queryParam.entity.createTime}
+            </if>
+            <if test="queryParam.entity.updateBy != null">
+
+                AND main.update_by = #{queryParam.entity.updateBy}
+            </if>
+            <if test="queryParam.entity.updateTime != null">
+
+                AND main.update_time = #{queryParam.entity.updateTime}
+            </if>
+            <if test="queryParam.entity.regionId != null">
+
+                AND main.region_id = #{queryParam.entity.regionId}
+            </if>
+            <if test="queryParam.entity.countryId != null">
+
+                AND main.country_id = #{queryParam.entity.countryId}
+            </if>
+            <if test="queryParam.entity.provinceId != null">
+
+                AND main.province_id = #{queryParam.entity.provinceId}
+            </if>
+            <if test="queryParam.entity.cityId != null">
+
+                AND main.city_id = #{queryParam.entity.cityId}
+            </if>
+            <if test="queryParam.entity.areaId != null">
+
+                AND main.area_id = #{queryParam.entity.areaId}
+            </if>
+            <if test="queryParam.entity.enterpriseId != null">
+
+                AND main.enterprise_id = #{queryParam.entity.enterpriseId}
+            </if>
+            <if test="queryParam.entity.stockHouseId != null">
+
+                AND main.stock_house_id = #{queryParam.entity.stockHouseId}
+            </if>
+        </if>
+    </sql>
+
+    <select id="idPage" resultType="java.lang.Long">
+        select distinct main.id
+
+        <include refid="base_from" />
+
+        <where>
+            <if test="queryParam.tenantId != null">
+                main.tenant_id = #{queryParam.tenantId}
+            </if>
+
+            <include refid="base_query_condition"/>
+
+        </where>
+
+        order by main.create_time desc
+    </select>
+</mapper>
